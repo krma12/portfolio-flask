@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Name — Portfolio</title>
+<meta name="description" content="Personal portfolio of Your Name — web developer and designer.">
+<meta property="og:title" content="Your Name — Portfolio">
+<meta property="og:description" content="Personal portfolio of Your Name — web developer and designer.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👋</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     QUICK START — things to change per project:
+     1. Colors: edit the --accent / --accent-2 / --accent-3
+        variables below (light theme) and again inside
+        [data-theme="dark"] if you want different dark tones.
+     2. Avatar photo: replace the img src="your-photo.jpg"
+        in the About section. If the file is missing it
+        automatically falls back to the "YN" initials.
+     3. Contact form: replace the Formspree action URL
+        with your own form endpoint (https://formspree.io),
+        and update the mailto: address.
+     4. Text: swap every "Your Name" / placeholder copy.
+     5. Socials: set your real GitHub and LinkedIn URLs in
+        the footer near the bottom of the body.
+     6. Projects: once you have repos, replace the "#" repo
+        links and add a one-line result/metric per project.
+     ============================================ */
+  :root{
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --text-muted: #6b7280;
+    --accent: #ff6b5b;      /* coral */
+    --accent-2: #6c63ff;    /* soft purple */
+    --accent-3: #22c1a3;    /* teal */
+    --border: #ececea;
+    --header-bg: rgba(251,250,248,0.85);
+    --ink: #1f2328;         /* always-dark chrome: buttons, contact box */
+    --ink-contrast: #ffffff;
+    --radius: 18px;
+    --shadow: 0 10px 30px rgba(31,35,40,0.06);
+    --shadow-hover: 0 16px 40px rgba(31,35,40,0.10);
+    --max-width: 1100px;
+  }
+
+  [data-theme="dark"]{
+    --bg: #14161a;
+    --surface: #1c1f24;
+    --text: #f4f4f2;
+    --text-muted: #9aa0a6;
+    --border: #2a2d33;
+    --header-bg: rgba(20,22,26,0.85);
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --shadow-hover: 0 16px 40px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body{
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; }
+
+  a { text-decoration: none; color: inherit; }
+
+  img { max-width: 100%; display: block; }
+
+  section[id]{ scroll-margin-top: 88px; }
+
+  .wrap{
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Skip link ---------- */
+  .skip-link{
+    position: absolute;
+    left: -999px;
+    top: auto;
+    background: var(--ink);
+    color: var(--ink-contrast);
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 1000;
+    font-weight: 600;
+  }
+
+  .skip-link:focus{ left: 16px; top: 16px; }
+
+  /* ---------- Nav ---------- */
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  nav.wrap{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .logo{
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    margin-right: auto;
+  }
+
+  .logo span{ color: var(--accent); }
+
+  .nav-links{
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a{
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+
+  .nav-links a:hover{ color: var(--text); }
+
+  .nav-cta{
+    background: var(--ink);
+    color: var(--ink-contrast);
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-cta:hover{ transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+  .theme-toggle{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .theme-toggle:hover{ transform: translateY(-2px); border-color: var(--text); }
+
+  .menu-toggle{
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position: relative;
+    padding: 100px 0 120px;
+    overflow: hidden;
+  }
+
+  .blob{
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+    z-index: 0;
+    animation: float 10s ease-in-out infinite;
+  }
+
+  .blob-1{ width: 320px; height: 320px; background: var(--accent); top: -80px; right: -60px; }
+  .blob-2{ width: 260px; height: 260px; background: var(--accent-2); bottom: -60px; left: -40px; animation-delay: 2s; }
+  .blob-3{ width: 180px; height: 180px; background: var(--accent-3); top: 40%; right: 20%; animation-delay: 4s; }
+
+  @keyframes float{
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-24px) scale(1.05); }
+  }
+
+  .hero-inner{
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .eyebrow{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .eyebrow .dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-3);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1{
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .highlight{
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero p{
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 540px;
+    margin: 0 auto 36px;
+  }
+
+  .hero-actions{
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .btn-primary{
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+
+  .btn-primary:hover{ transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+
+  .btn-secondary{
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover{ transform: translateY(-3px); border-color: var(--text); }
+
+  /* ---------- Sections shared ---------- */
+  section{ padding: 90px 0; }
+
+  .section-head{
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto 56px;
+  }
+
+  .section-head .tag{
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .section-head h2{
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .section-head p{ color: var(--text-muted); }
+
+  /* ---------- About ---------- */
+  .about{
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 56px;
+    align-items: center;
+  }
+
+  .about-avatar{
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .about-avatar img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-fallback{
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 4rem;
+    font-weight: 700;
+  }
+
+  .about-text .tag{
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .about-text h2{
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 10px 0 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .about-text p{ color: var(--text-muted); margin-bottom: 16px; }
+
+  .stats{
+    display: flex;
+    gap: 32px;
+    margin-top: 28px;
+  }
+
+  .stat h3{ font-size: 1.6rem; font-weight: 800; }
+  .stat span{ color: var(--text-muted); font-size: 0.85rem; }
+
+  /* ---------- Skills ---------- */
+  .skills-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .skill-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .skill-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-hover); }
+
+  .skill-icon{
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+
+  .skill-card:nth-child(1) .skill-icon{ background: rgba(255,107,91,0.12); }
+  .skill-card:nth-child(2) .skill-icon{ background: rgba(108,99,255,0.12); }
+  .skill-card:nth-child(3) .skill-icon{ background: rgba(34,193,163,0.12); }
+  .skill-card:nth-child(4) .skill-icon{ background: rgba(255,107,91,0.12); }
+
+  .skill-card h3{ font-size: 1.05rem; margin-bottom: 8px; }
+  .skill-card p{ color: var(--text-muted); font-size: 0.9rem; }
+
+  /* ---------- Projects ---------- */
+  .projects-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .project-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .project-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-hover); }
+
+  .project-thumb{
+    height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+
+  /* Ciclamos los 3 colores cada 3 tarjetas, así se ve bien sin importar cuántos proyectos haya */
+  .project-card:nth-child(3n+1) .project-thumb{ background: linear-gradient(135deg, var(--accent), #ffb199); }
+  .project-card:nth-child(3n+2) .project-thumb{ background: linear-gradient(135deg, var(--accent-2), #a29bff); }
+  .project-card:nth-child(3n+3) .project-thumb{ background: linear-gradient(135deg, var(--accent-3), #7fe0cd); }
+
+  .empty-state{
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+  }
+
+  .project-body{ padding: 22px; }
+
+  .project-body h3{ font-size: 1.1rem; margin-bottom: 8px; }
+  .project-body p{ color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px; }
+
+  .project-link{
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+
+  .project-metric{
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-3);
+    margin-bottom: 14px !important;
+  }
+
+  .project-links{
+    display: flex;
+    gap: 18px;
+  }
+
+  /* ---------- Contact ---------- */
+  .contact-box{
+    background: var(--ink);
+    border-radius: 28px;
+    padding: 64px 40px;
+    text-align: center;
+    color: var(--ink-contrast);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact-box h2{ font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin-bottom: 12px; font-weight: 700; }
+  .contact-box > p{ color: rgba(255,255,255,0.65); margin-bottom: 32px; }
+
+  .contact-box .btn-primary{ background: #fff; color: var(--ink); }
+
+  .contact-form{
+    max-width: 460px;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .contact-form label{
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: -8px;
+  }
+
+  .contact-form input,
+  .contact-form textarea{
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+
+  .contact-form input::placeholder,
+  .contact-form textarea::placeholder{ color: rgba(255,255,255,0.45); }
+
+  .contact-form input:focus,
+  .contact-form textarea:focus{ outline: none; border-color: #fff; }
+
+  .contact-form button{ align-self: center; margin-top: 6px; }
+
+  .contact-alt{
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+  }
+
+  .contact-alt a{ color: #fff; text-decoration: underline; }
+
+  /* ---------- Footer ---------- */
+  footer{
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .footer-socials{
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .footer-socials a{
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .footer-socials a:hover{ background: var(--ink); color: #fff; transform: translateY(-3px); }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    .blob, .eyebrow .dot{ animation: none !important; }
+    *{ transition-duration: 0.01ms !important; }
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 780px){
+    .nav-links{
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px 28px;
+    }
+    .nav-links.open{ display: flex; }
+    .nav-cta{ display: none; }
+    .menu-toggle{ display: block; }
+    .about{ grid-template-columns: 1fr; }
+    .about-avatar{ max-width: 240px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header>
+  <nav class="wrap">
+    <a href="#" class="logo">Your<span>Name</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+    <a href="#contact" class="nav-cta">Let's talk</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">☰</button>
+  </nav>
+</header>
+
+<main id="main">
+
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="wrap hero-inner">
+    <span class="eyebrow"><span class="dot"></span> Open to new opportunities</span>
+    <h1>Hi, I'm <span class="highlight">Your Name</span> — I build things for the web.</h1>
+    <p>A short, friendly line about who you are and what you do. Keep it to one sentence people will actually remember.</p>
+    <div class="hero-actions">
+      <a href="#projects" class="btn btn-primary">View my work</a>
+      <a href="#contact" class="btn btn-secondary">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about">
+    <div class="about-avatar">
+      <img src="your-photo.jpg" alt="Portrait of Your Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <span class="avatar-fallback">YN</span>
+    </div>
+    <div class="about-text">
+      <span class="tag">About me</span>
+      <h2>A little about my story</h2>
+      <p>Replace this with a couple of sentences about your background, what you're studying, and what excites you. Keep the tone conversational — this is where people get a sense of you as a person, not just a resume.</p>
+      <p>Add a second paragraph about your goals or what you're currently working on or learning.</p>
+      <div class="stats">
+        <div class="stat"><h3>3+</h3><span>Projects</span></div>
+        <div class="stat"><h3>2</h3><span>Years learning</span></div>
+        <div class="stat"><h3>5</h3><span>Tools I love</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">What I do</span>
+      <h2>Skills & tools</h2>
+      <p>A quick overview of what you're good at — edit these four cards freely.</p>
+    </div>
+    <div class="skills-grid">
+      <article class="skill-card">
+        <div class="skill-icon">🐍</div>
+        <h3>Languages & Libraries</h3>
+        <p>Python, NumPy, Pandas — plus whichever ML framework you're learning (PyTorch, TensorFlow, scikit-learn).</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🤖</div>
+        <h3>AI/ML Tools</h3>
+        <p>Jupyter and Hugging Face to start — add LangChain, MLflow, or Docker as you pick them up.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">📊</div>
+        <h3>Core Concepts</h3>
+        <p>Model training and evaluation metrics, building toward fine-tuning and RAG.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🤝</div>
+        <h3>Collaboration</h3>
+        <p>Git/GitHub workflow, clear documentation, and working well in teams.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">My work</span>
+      <h2>Featured projects</h2>
+      <p>As you build projects, add them here with a result and a link to the code.</p>
+    </div>
+    <div class="projects-grid">
+      {% for proyecto in proyectos %}
+      <article class="project-card">
+        <div class="project-thumb">🚀</div>
+        <div class="project-body">
+          <h3>{{ proyecto.titulo }}</h3>
+          <p>{{ proyecto.descripcion }}</p>
+          {% if proyecto.resultado %}
+          <p class="project-metric">Key result: {{ proyecto.resultado }}</p>
+          {% endif %}
+          <div class="project-links">
+            {% if proyecto.repo_url %}
+            <a href="{{ proyecto.repo_url }}" class="project-link" target="_blank" rel="noopener">GitHub ↗</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <div class="empty-state">
+        <p>No projects yet — add your first one through the API and it'll show up here automatically.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <h2>Let's build something together</h2>
+      <p>Have a project in mind or just want to say hi? Fill out the form below.</p>
+      <form class="contact-form" action="https://formspree.io/f/yourFormID" method="POST">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" required></textarea>
+        <button type="submit" class="btn btn-primary">Send message</button>
+      </form>
+      <p class="contact-alt">or email me directly at <a href="mailto:you@example.com">you@example.com</a></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-socials">
+      <a href="mailto:you@example.com" aria-label="Email">✉</a>
+      <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" aria-label="LinkedIn" target="_blank" rel="noopener">in</a>
+      <a href="https://github.com/krma12" aria-label="GitHub" target="_blank" rel="noopener">gh</a>
+    </div>
+    <p>&copy; 2026 Your Name. Built with HTML & CSS.</p>
+  </div>
+</footer>
+
+<script>
+  // ---- Mobile menu toggle ----
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+
+  menuToggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', isOpen);
+    menuToggle.textContent = isOpen ? '✕' : '☰';
+  });
+
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', false);
+      menuToggle.textContent = '☰';
+    });
+  });
+
+  // ---- Light / dark theme toggle ----
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      root.setAttribute('data-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    } else {
+      root.removeAttribute('data-theme');
+      themeToggle.textContent = '🌙';
+    }
+  }
+
+  const storedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Entorno virtual - no se sube, se recrea con requirements.txt
+mi_entorno/
+
+# Archivos cacheados de Python
+__pycache__/
+*.pyc
+
+# Base de datos local (datos de prueba, no deben ir al repo)
+instance/
+
+# Configuración de IDEs
+.idea/
+.vscode/
