@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Name — Portfolio</title>
-<meta name="description" content="Personal portfolio of Your Name — web developer and designer.">
-<meta property="og:title" content="Your Name — Portfolio">
-<meta property="og:description" content="Personal portfolio of Your Name — web developer and designer.">
+<title>Hugo Maldonado — Portfolio</title>
+<meta name="description" content="Portfolio of Hugo Maldonado — AI engineering student building projects in Python, data and computer vision.">
+<meta property="og:title" content="Hugo Maldonado — Portfolio">
+<meta property="og:description" content="Portfolio of Hugo Maldonado — AI engineering student building projects in Python, data and computer vision.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👋</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -603,7 +603,7 @@
 
 <header>
   <nav class="wrap">
-    <a href="#" class="logo">Your<span>Name</span></a>
+    <a href="#" class="logo">Hugo<span>Maldonado</span></a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#about">About</a></li>
       <li><a href="#skills">Skills</a></li>
@@ -624,8 +624,8 @@
   <div class="blob blob-3"></div>
   <div class="wrap hero-inner">
     <span class="eyebrow"><span class="dot"></span> Open to new opportunities</span>
-    <h1>Hi, I'm <span class="highlight">Your Name</span> — I build things for the web.</h1>
-    <p>A short, friendly line about who you are and what you do. Keep it to one sentence people will actually remember.</p>
+    <h1>Hi, I'm <span class="highlight">Hugo Maldonado</span> — I build with Python, data and AI.</h1>
+    <p>AI engineering student preparing to specialize in cybersecurity. I learn by building real projects, from web apps to computer vision.</p>
     <div class="hero-actions">
       <a href="#projects" class="btn btn-primary">View my work</a>
       <a href="#contact" class="btn btn-secondary">Get in touch</a>
@@ -636,18 +636,17 @@
 <section id="about">
   <div class="wrap about">
     <div class="about-avatar">
-      <img src="your-photo.jpg" alt="Portrait of Your Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <span class="avatar-fallback">YN</span>
+      <img src="{{ url_for('static', filename='foto.jpg') }}" alt="Portrait of Hugo Maldonado" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <span class="avatar-fallback">HM</span>
     </div>
     <div class="about-text">
       <span class="tag">About me</span>
       <h2>A little about my story</h2>
-      <p>Replace this with a couple of sentences about your background, what you're studying, and what excites you. Keep the tone conversational — this is where people get a sense of you as a person, not just a resume.</p>
-      <p>Add a second paragraph about your goals or what you're currently working on or learning.</p>
+      <p>I'm studying Artificial Intelligence Engineering and building my skills through hands-on projects: a Flask task manager, a Space Invaders clone, a data analysis of crime incidence in Mexico, and a real-time face filter with OpenCV.</p>
+      <p>My goal is to combine AI with cybersecurity and become a specialist in that field. Right now I'm working through Python for data, then machine learning.</p>
       <div class="stats">
-        <div class="stat"><h3>3+</h3><span>Projects</span></div>
-        <div class="stat"><h3>2</h3><span>Years learning</span></div>
-        <div class="stat"><h3>5</h3><span>Tools I love</span></div>
+        <div class="stat"><h3>6</h3><span>Projects</span></div>
+        <div class="stat"><h3>3</h3><span>Areas: web, data, vision</span></div>
       </div>
     </div>
   </div>
@@ -658,28 +657,28 @@
     <div class="section-head">
       <span class="tag">What I do</span>
       <h2>Skills & tools</h2>
-      <p>A quick overview of what you're good at — edit these four cards freely.</p>
+      <p>The tools I've used in my projects so far.</p>
     </div>
     <div class="skills-grid">
       <article class="skill-card">
         <div class="skill-icon">🐍</div>
-        <h3>Languages & Libraries</h3>
-        <p>Python, NumPy, Pandas — plus whichever ML framework you're learning (PyTorch, TensorFlow, scikit-learn).</p>
+        <h3>Python & Data</h3>
+        <p>Python, NumPy, Pandas and Jupyter for data cleaning and exploratory analysis.</p>
       </article>
       <article class="skill-card">
         <div class="skill-icon">🤖</div>
-        <h3>AI/ML Tools</h3>
-        <p>Jupyter and Hugging Face to start — add LangChain, MLflow, or Docker as you pick them up.</p>
+        <h3>Computer Vision</h3>
+        <p>OpenCV and Mediapipe for real-time face detection and augmented reality filters.</p>
       </article>
       <article class="skill-card">
         <div class="skill-icon">📊</div>
-        <h3>Core Concepts</h3>
-        <p>Model training and evaluation metrics, building toward fine-tuning and RAG.</p>
+        <h3>Web Backend</h3>
+        <p>Flask, SQLite and SQLAlchemy, REST APIs and Jinja2 templates, plus object-oriented design.</p>
       </article>
       <article class="skill-card">
         <div class="skill-icon">🤝</div>
-        <h3>Collaboration</h3>
-        <p>Git/GitHub workflow, clear documentation, and working well in teams.</p>
+        <h3>Tools & Games</h3>
+        <p>Git and GitHub for version control, plus Pygame for game development.</p>
       </article>
     </div>
   </div>
@@ -690,7 +689,7 @@
     <div class="section-head">
       <span class="tag">My work</span>
       <h2>Featured projects</h2>
-      <p>As you build projects, add them here with a result and a link to the code.</p>
+      <p>Things I've built, with the code on GitHub.</p>
     </div>
     <div class="projects-grid">
       {% for proyecto in proyectos %}
@@ -727,12 +726,12 @@
         <label for="name">Name</label>
         <input type="text" id="name" name="name" placeholder="Your name" required>
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required>
         <label for="message">Message</label>
         <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" required></textarea>
         <button type="submit" class="btn btn-primary">Send message</button>
       </form>
-      <p class="contact-alt">or email me directly at <a href="mailto:you@example.com">you@example.com</a></p>
+      <p class="contact-alt">or email me directly at <a href="mailto:sowyer99@hotmail.com">sowyer99@hotmail.com</a></p>
     </div>
   </div>
 </section>
@@ -742,11 +741,11 @@
 <footer>
   <div class="wrap">
     <div class="footer-socials">
-      <a href="mailto:you@example.com" aria-label="Email">✉</a>
+      <a href="mailto:sowyer99@hotmail.com" aria-label="Email">✉</a>
       <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" aria-label="LinkedIn" target="_blank" rel="noopener">in</a>
       <a href="https://github.com/krma12" aria-label="GitHub" target="_blank" rel="noopener">gh</a>
     </div>
-    <p>&copy; 2026 Your Name. Built with HTML & CSS.</p>
+    <p>&copy; 2026 Hugo Maldonado. Built with Flask, HTML & CSS.</p>
   </div>
 </footer>
 
