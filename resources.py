@@ -2,7 +2,7 @@ import hmac
 from functools import wraps
 
 from flask import current_app, make_response, render_template, request
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, inputs, reqparse
 
 from models import Proyecto, db
 
@@ -68,8 +68,9 @@ parser.add_argument('demo_url', type=str)
 parser.add_argument('tecnologias', type=str)   # "Python, Flask, SQLite"
 parser.add_argument('emoji', type=str)
 parser.add_argument('orden', type=int, default=0)
+parser.add_argument('es_fork', type=inputs.boolean, default=False)   # acepta true/false
 
-CAMPOS = ['titulo', 'descripcion', 'resultado', 'descripcion_es', 'resultado_es', 'repo_url', 'demo_url', 'tecnologias', 'emoji', 'orden']
+CAMPOS = ['titulo', 'descripcion', 'resultado', 'descripcion_es', 'resultado_es', 'repo_url', 'demo_url', 'tecnologias', 'emoji', 'orden', 'es_fork']
 
 
 class ListaProyectos(Resource):

@@ -9,7 +9,7 @@ Personal portfolio website built with Flask, SQLAlchemy, and a REST API for mana
 - **"View as JSON"** toggle: shows the real response of `GET /proyectos`, syntax-highlighted, with status code and response time.
 - **English / Spanish** toggle for the whole page and the terminal. Project descriptions are stored in both languages in the database.
 - Responsive landing page (hero, about, skills, projects, contact) with light/dark mode.
-- Projects render dynamically from the database, each with its technologies, key result, GitHub link and live demo (when there is one).
+- Projects render dynamically from the database, each with its technologies, key result, GitHub link and live demo (when there is one). Forked coursework repos are labeled "Fork · Coursework".
 - Stats calculated automatically from the data (number of projects and tools used).
 - REST API (`/proyectos`) with full CRUD. **Reading is public; creating, editing and deleting require an API key.**
 - Contact form powered by [Formspree](https://formspree.io), with a honeypot field against spam bots. Without a Formspree ID it falls back to email and LinkedIn buttons.
@@ -128,7 +128,7 @@ Without the key, the API answers `401 Unauthorized`.
 python -m pytest
 ```
 
-15 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, and the bilingual content and terminal. They use an in-memory database, so they never touch `proyectos.db`.
+16 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, and fork badges. They use an in-memory database, so they never touch `proyectos.db`.
 
 ## More about me
 

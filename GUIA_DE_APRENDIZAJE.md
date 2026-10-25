@@ -248,7 +248,7 @@ En lugar de probar a mano cada ruta, escribimos pruebas en `tests/test_api.py` q
 
 `app.test_client()` simula un navegador: hace peticiones a la app sin levantar el servidor.
 
-Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 15 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
+Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 16 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
 
 ---
 

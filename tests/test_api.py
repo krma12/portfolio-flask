@@ -129,3 +129,10 @@ def test_pagina_trae_ambos_idiomas_y_la_terminal(cliente):
 
 def test_archivo_js_se_sirve(cliente):
     assert cliente.get('/static/portfolio.js').status_code == 200
+
+
+def test_forks_se_marcan(cliente):
+    respuesta = cliente.post('/proyectos', headers=CLAVE, json={'titulo': 'Fork de clase', 'es_fork': True})
+    assert respuesta.get_json()['es_fork'] is True
+    html = cliente.get('/').data.decode()
+    assert 'Fork · Coursework' in html

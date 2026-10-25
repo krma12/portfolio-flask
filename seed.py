@@ -103,6 +103,29 @@ proyectos = [
         "tecnologias": "Kali Linux, Cybersecurity",
         "emoji": "🔐",
     },
+    # ---- Forks: ejercicios de clase (se muestran con la etiqueta "Fork · Coursework") ----
+    {
+        "titulo": "Pandas & EDA",
+        "descripcion": "Coursework on Pandas fundamentals and exploratory data analysis, step by step, using the IMDB movies dataset (2006–2016).",
+        "resultado": "Complete EDA notebook",
+        "descripcion_es": "Ejercicios de clase sobre fundamentos de Pandas y análisis exploratorio de datos, paso a paso, con el dataset de películas de IMDB (2006–2016).",
+        "resultado_es": "Notebook de EDA completo",
+        "repo_url": "https://github.com/krma12/Pandas_Introduction",
+        "tecnologias": "Python, Pandas, Jupyter",
+        "emoji": "🐼",
+        "es_fork": True,
+    },
+    {
+        "titulo": "NumPy Practice",
+        "descripcion": "Coursework on advanced NumPy: multidimensional arrays, random matrices and basic image analysis.",
+        "resultado": "Exercise notebooks",
+        "descripcion_es": "Ejercicios de clase de NumPy avanzado: arreglos multidimensionales, matrices aleatorias y análisis básico de imágenes.",
+        "resultado_es": "Notebooks de ejercicios",
+        "repo_url": "https://github.com/krma12/numpy",
+        "tecnologias": "Python, NumPy, Jupyter",
+        "emoji": "🧮",
+        "es_fork": True,
+    },
 ]
 
 with app.app_context():

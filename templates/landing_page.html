@@ -728,6 +728,14 @@
   .view-toggle button[aria-pressed="true"]{ background: var(--ink); color: var(--ink-contrast); }
   [data-theme="dark"] .view-toggle button[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
   .project-card.oculto{ display: none; }
+  .fork-badge{
+    display: inline-block; align-self: flex-start;
+    font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; margin: -2px 0 10px;
+    border-radius: 999px;
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+  }
   .project-card.aparece{ animation: aparece .35s ease; }
   @keyframes aparece{ from{ opacity: 0; transform: translateY(10px); } to{ opacity: 1; transform: none; } }
   .json-panel{
@@ -946,6 +954,10 @@
         <div class="project-thumb" aria-hidden="true">{{ proyecto.emoji or '🚀' }}</div>
         <div class="project-body">
           <h3>{{ proyecto.titulo }}</h3>
+          {% if proyecto.es_fork %}
+          <span class="fork-badge" data-lang="en">⑂ Fork · Coursework</span>
+          <span class="fork-badge" data-lang="es">⑂ Fork · Ejercicios de clase</span>
+          {% endif %}
           <p data-lang="en">{{ proyecto.descripcion }}</p>
           <p data-lang="es">{{ proyecto.descripcion_es or proyecto.descripcion }}</p>
           {% if proyecto.resultado %}

@@ -29,6 +29,7 @@ class Proyecto(db.Model):
     tecnologias = db.Column(db.String(200))    # separadas por coma: "Python, Flask, SQLite"
     emoji = db.Column(db.String(8))            # ícono de la tarjeta, ej. "🎮"
     orden = db.Column(db.Integer, default=0)   # para decidir qué proyecto sale primero
+    es_fork = db.Column(db.Boolean, default=False)  # True = copia de un repo de clase (fork)
 
     @property
     def lista_tecnologias(self):
@@ -51,4 +52,5 @@ class Proyecto(db.Model):
             'tecnologias': self.lista_tecnologias,
             'emoji': self.emoji,
             'orden': self.orden,
+            'es_fork': bool(self.es_fork),
         }
