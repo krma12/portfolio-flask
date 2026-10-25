@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hugo Maldonado — Portfolio</title>
+<meta name="description" content="Portfolio of Hugo Maldonado — AI engineering student building projects in Python, data and computer vision.">
+<!-- Vista previa al compartir el link (WhatsApp, LinkedIn…). _external=True genera la URL completa -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url_root }}">
+<meta property="og:title" content="Hugo Maldonado — Portfolio">
+<meta property="og:description" content="AI engineering student building projects in Python, data, computer vision and cybersecurity.">
+<meta property="og:image" content="{{ url_for('static', filename='og-image.jpg', _external=True) }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --text-muted: #6b7280;
+    --accent: #ff6b5b;      /* coral */
+    --accent-2: #6c63ff;    /* soft purple */
+    --accent-3: #22c1a3;    /* teal */
+    --border: #ececea;
+    --header-bg: rgba(251,250,248,0.85);
+    --ink: #1f2328;         /* always-dark chrome: buttons, contact box */
+    --ink-contrast: #ffffff;
+    --radius: 18px;
+    --shadow: 0 10px 30px rgba(31,35,40,0.06);
+    --shadow-hover: 0 16px 40px rgba(31,35,40,0.10);
+    --max-width: 1100px;
+  }
+
+  [data-theme="dark"]{
+    --bg: #14161a;
+    --surface: #1c1f24;
+    --text: #f4f4f2;
+    --text-muted: #9aa0a6;
+    --border: #2a2d33;
+    --header-bg: rgba(20,22,26,0.85);
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --shadow-hover: 0 16px 40px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body{
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, .logo { font-family: 'Poppins', sans-serif; }
+
+  a { text-decoration: none; color: inherit; }
+
+  img { max-width: 100%; display: block; }
+
+  section[id]{ scroll-margin-top: 88px; }
+
+  .wrap{
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* "hidden" siempre gana, aunque el elemento tenga display: grid */
+  [hidden]{ display: none !important; }
+
+  .sr-only{ position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  /* ---------- Skip link ---------- */
+  .skip-link{
+    position: absolute;
+    left: -999px;
+    top: auto;
+    background: var(--ink);
+    color: var(--ink-contrast);
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 1000;
+    font-weight: 600;
+  }
+
+  .skip-link:focus{ left: 16px; top: 16px; }
+
+  /* ---------- Nav ---------- */
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  nav.wrap{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .logo{
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    margin-right: auto;
+  }
+
+  .logo span{ color: var(--accent); }
+
+  .nav-links{
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a{
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+
+  .nav-links a:hover{ color: var(--text); }
+
+  .nav-cta{
+    background: var(--ink);
+    color: var(--ink-contrast);
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-cta:hover{ transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+  .theme-toggle{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .theme-toggle:hover{ transform: translateY(-2px); border-color: var(--text); }
+
+  .menu-toggle{
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position: relative;
+    padding: 100px 0 120px;
+    overflow: hidden;
+  }
+
+  .blob{
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+    z-index: 0;
+    animation: float 10s ease-in-out infinite;
+  }
+
+  .blob-1{ width: 320px; height: 320px; background: var(--accent); top: -80px; right: -60px; }
+  .blob-2{ width: 260px; height: 260px; background: var(--accent-2); bottom: -60px; left: -40px; animation-delay: 2s; }
+  .blob-3{ width: 180px; height: 180px; background: var(--accent-3); top: 40%; right: 20%; animation-delay: 4s; }
+
+  @keyframes float{
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-24px) scale(1.05); }
+  }
+
+  .hero-inner{
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .eyebrow{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .eyebrow .dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-3);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1{
+    font-size: clamp(2.1rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .highlight{
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero p{
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 540px;
+    margin: 0 0 36px;
+  }
+
+  .hero-actions{
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .btn-primary{
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+
+  .btn-primary:hover{ transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+
+  /* En modo oscuro el botón principal se invierte para que resalte */
+  [data-theme="dark"] .btn-primary,
+  [data-theme="dark"] .nav-cta{ background: var(--text); color: var(--bg); }
+  [data-theme="dark"] .contact-box{ border: 1px solid var(--border); }
+
+  .btn-secondary{
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover{ transform: translateY(-3px); border-color: var(--text); }
+
+  /* ---------- Sections shared ---------- */
+  section{ padding: 90px 0; }
+
+  .section-head{
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto 56px;
+  }
+
+  .section-head .tag{
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .section-head h2{
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .section-head p{ color: var(--text-muted); }
+
+  /* ---------- About ---------- */
+  .about{
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 56px;
+    align-items: center;
+  }
+
+  .about-avatar{
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .about-avatar img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-fallback{
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 4rem;
+    font-weight: 700;
+  }
+
+  .about-text .tag{
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .about-text h2{
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 10px 0 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .about-text p{ color: var(--text-muted); margin-bottom: 16px; }
+
+  .stats{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    margin-top: 28px;
+  }
+
+  .stat h3{ font-size: 1.6rem; font-weight: 800; }
+  .stat span{ color: var(--text-muted); font-size: 0.85rem; }
+
+  /* ---------- Skills ---------- */
+  .skills-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 20px;
+  }
+
+  .skill-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .skill-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-hover); }
+
+  .skill-icon{
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+
+  .skill-card:nth-child(1) .skill-icon{ background: rgba(255,107,91,0.12); }
+  .skill-card:nth-child(2) .skill-icon{ background: rgba(108,99,255,0.12); }
+  .skill-card:nth-child(3) .skill-icon{ background: rgba(34,193,163,0.12); }
+  .skill-card:nth-child(4) .skill-icon{ background: rgba(255,107,91,0.12); }
+  .skill-card:nth-child(5) .skill-icon{ background: rgba(108,99,255,0.12); }
+  .skill-card:nth-child(6) .skill-icon{ background: rgba(34,193,163,0.12); }
+
+  .skill-card h3{ font-size: 1.05rem; margin-bottom: 8px; }
+  .skill-card p{ color: var(--text-muted); font-size: 0.9rem; }
+
+  /* ---------- Projects ---------- */
+  .projects-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .project-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .project-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-hover); }
+
+  .project-thumb{
+    height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+
+  /* Ciclamos los 3 colores cada 3 tarjetas, así se ve bien sin importar cuántos proyectos haya */
+  .project-card:nth-child(3n+1) .project-thumb{ background: linear-gradient(135deg, var(--accent), #ffb199); }
+  .project-card:nth-child(3n+2) .project-thumb{ background: linear-gradient(135deg, var(--accent-2), #a29bff); }
+  .project-card:nth-child(3n+3) .project-thumb{ background: linear-gradient(135deg, var(--accent-3), #7fe0cd); }
+
+  .empty-state{
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+  }
+
+  .project-body{ padding: 22px; }
+
+  .project-body h3{ font-size: 1.1rem; margin-bottom: 8px; }
+  .project-body p{ color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px; }
+
+  .project-link{
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+
+  .project-metric{
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-3);
+    margin-bottom: 14px !important;
+  }
+
+  .project-links{
+    display: flex;
+    gap: 18px;
+  }
+
+  /* Etiquetas de tecnologías de cada proyecto */
+  .tech-tags{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    margin-bottom: 16px;
+  }
+
+  .tech-tags li{
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .project-card{ display: flex; flex-direction: column; }
+  .project-body{ display: flex; flex-direction: column; flex: 1; }
+  .project-links{ margin-top: auto; }
+
+  .about-link{
+    display: inline-block;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .about-link:hover{ text-decoration: underline; }
+
+  .contact-actions{
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .contact-box .btn-secondary{ background: transparent; color: #fff; border-color: rgba(255,255,255,0.35); }
+
+  /* Campo trampa anti-spam: invisible para personas, los bots lo llenan */
+  .honeypot{ position: absolute; left: -9999px; }
+
+  /* ---------- Contact ---------- */
+  .contact-box{
+    background: var(--ink);
+    border-radius: 28px;
+    padding: 64px 40px;
+    text-align: center;
+    color: var(--ink-contrast);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact-box h2{ font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin-bottom: 12px; font-weight: 700; }
+  .contact-box > p{ color: rgba(255,255,255,0.65); margin-bottom: 32px; }
+
+  .contact-box .btn-primary{ background: #fff; color: var(--ink); }
+
+  .contact-form{
+    max-width: 460px;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .contact-form label{
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: -8px;
+  }
+
+  .contact-form input,
+  .contact-form textarea{
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+
+  .contact-form input::placeholder,
+  .contact-form textarea::placeholder{ color: rgba(255,255,255,0.45); }
+
+  .contact-form input:focus,
+  .contact-form textarea:focus{ outline: none; border-color: #fff; }
+
+  .contact-form button{ align-self: center; margin-top: 6px; }
+
+  .contact-alt{
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+  }
+
+  .contact-alt a{ color: #fff; text-decoration: underline; }
+
+  /* ---------- Footer ---------- */
+  footer{
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .footer-socials{
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .footer-socials a{
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .footer-socials a:hover{ background: var(--ink); color: #fff; transform: translateY(-3px); }
+
+
+  /* =========================================================
+     TERMINAL INTERACTIVA (ver static/portfolio.js)
+     ========================================================= */
+  .term{
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(13,17,23,0.25);
+    font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    font-size: 0.85rem;
+    color: #c9d1d9;
+    text-align: left;
+  }
+  .term-bar{
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+  }
+  .term-bar span{ width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+  .term-bar span:nth-child(2){ background: #febc2e; }
+  .term-bar span:nth-child(3){ background: #28c840; }
+  .term-bar p{ margin: 0 0 0 8px !important; font-size: 0.75rem !important; color: #8b949e !important; }
+  .term-body{
+    height: 300px;
+    overflow-y: auto;
+    padding: 16px 18px 4px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    scrollbar-width: thin;
+    scrollbar-color: #30363d transparent;
+  }
+  .term-body .ln{ min-height: 1.6em; }
+  .term-body .cmd{ color: #f0f6fc; }
+  .term-body .cmd::before{ content: "hugo@portfolio:~$ "; color: #3fb950; }
+  .term-body .ok{ color: #3fb950; }
+  .term-body .warn{ color: #d29922; }
+  .term-body .err{ color: #ff7b72; }
+  .term-body .dim{ color: #8b949e; }
+  .term-body .acc{ color: #ff8a7d; }
+  .term-body .pur{ color: #a5a0ff; }
+  .term-body a{ color: #58a6ff; text-decoration: underline; }
+  .term-form{
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 18px 16px;
+  }
+  .term-form label{ color: #3fb950; white-space: nowrap; }
+  .term-form input{
+    flex: 1; min-width: 0;
+    background: transparent; border: none; outline: none;
+    color: #f0f6fc; font: inherit; caret-color: #3fb950;
+  }
+  .term:focus-within{ border-color: #3fb950; }
+  .term-chips{
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 14px;
+  }
+  .term-chips button, .chip{
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color .2s, border-color .2s, transform .2s;
+  }
+  .term-chips button:hover, .chip:hover{ color: var(--text); border-color: var(--text); transform: translateY(-2px); }
+  .term-chips button:focus-visible, .chip:focus-visible, .view-toggle button:focus-visible{ outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+  /* Botón de idioma en la barra de navegación */
+  .lang-toggle{
+    height: 40px; padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700; font-size: 0.8rem; letter-spacing: .04em;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .lang-toggle:hover{ transform: translateY(-2px); border-color: var(--text); }
+
+  /* Textos en dos idiomas: se muestra solo el del idioma activo */
+  html[lang="es"] [data-lang="en"],
+  html[lang="en"] [data-lang="es"]{ display: none !important; }
+
+  /* =========================================================
+     FILTROS Y VISTA JSON
+     ========================================================= */
+  .projects-toolbar{
+    display: flex; flex-wrap: wrap; gap: 16px;
+    align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .filters{ display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip small{ opacity: .6; margin-left: 4px; }
+  .chip[aria-pressed="true"]{ background: var(--ink); color: var(--ink-contrast); border-color: var(--ink); }
+  [data-theme="dark"] .chip[aria-pressed="true"]{ background: var(--text); color: var(--bg); border-color: var(--text); }
+  .view-toggle{
+    display: inline-flex; padding: 4px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface);
+  }
+  .view-toggle button{
+    border: none; background: transparent; cursor: pointer;
+    padding: 6px 14px; border-radius: 999px;
+    font: 600 0.8rem 'Inter', sans-serif; color: var(--text-muted);
+  }
+  .view-toggle button[aria-pressed="true"]{ background: var(--ink); color: var(--ink-contrast); }
+  [data-theme="dark"] .view-toggle button[aria-pressed="true"]{ background: var(--text); color: var(--bg); }
+  .project-card.oculto{ display: none; }
+  .project-card.aparece{ animation: aparece .35s ease; }
+  @keyframes aparece{ from{ opacity: 0; transform: translateY(10px); } to{ opacity: 1; transform: none; } }
+  .json-panel{
+    background: #0d1117; color: #c9d1d9;
+    border: 1px solid #30363d; border-radius: var(--radius);
+    overflow: hidden;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.8rem;
+  }
+  .json-head{
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 12px 18px; background: #161b22; border-bottom: 1px solid #30363d;
+  }
+  .json-head .metodo{ color: #3fb950; font-weight: 700; }
+  .json-head .estado{ color: #3fb950; margin-left: auto; }
+  .json-head .dim{ color: #8b949e; }
+  .json-panel pre{
+    margin: 0; padding: 18px; max-height: 560px; overflow: auto;
+    line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+  }
+  .j-key{ color: #79c0ff; } .j-str{ color: #a5d6ff; } .j-num{ color: #ffa657; } .j-null{ color: #ff7b72; }
+  .empty-filter{ grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 30px; }
+
+  @media (max-width: 900px){
+    .hero-inner{ grid-template-columns: 1fr; gap: 36px; }
+    .hero{ padding: 70px 0 90px; }
+  }
+  @media (max-width: 780px){
+    .term-body{ height: 260px; }
+    .projects-toolbar{ flex-direction: column; align-items: flex-start; }
+  }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    .blob, .eyebrow .dot{ animation: none !important; }
+    *{ transition-duration: 0.01ms !important; }
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 780px){
+    .nav-links{
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px 28px;
+    }
+    .nav-links.open{ display: flex; }
+    .nav-cta{ display: none; }
+    .menu-toggle{ display: block; }
+    .about{ grid-template-columns: 1fr; }
+    .about-avatar{ max-width: 240px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link" data-i18n="skip">Skip to content</a>
+
+<header>
+  <nav class="wrap">
+    <a href="#" class="logo">Hugo<span>Maldonado</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about" data-i18n="nav.about">About</a></li>
+      <li><a href="#skills" data-i18n="nav.skills">Skills</a></li>
+      <li><a href="#projects" data-i18n="nav.projects">Projects</a></li>
+      <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+    </ul>
+    <button class="lang-toggle" id="langToggle" aria-label="Cambiar a español">ES</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+    <a href="#contact" class="nav-cta" data-i18n="nav.cta">Let's talk</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">☰</button>
+  </nav>
+</header>
+
+<main id="main">
+
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="wrap hero-inner">
+    <div class="hero-text">
+      <span class="eyebrow"><span class="dot"></span> <span data-i18n="hero.eyebrow">Open to new opportunities</span></span>
+      <h1 data-i18n-html="hero.title">Hi, I'm <span class="highlight">Hugo Maldonado</span> — I build with Python, data and AI.</h1>
+      <p data-i18n="hero.text">AI engineering student preparing to specialize in cybersecurity. I learn by building real projects, from web apps to computer vision.</p>
+      <div class="hero-actions">
+        <a href="#projects" class="btn btn-primary" data-i18n="hero.work">View my work</a>
+        <a href="#contact" class="btn btn-secondary" data-i18n="hero.contact">Get in touch</a>
+      </div>
+    </div>
+
+    <!-- Terminal interactiva: la lógica está en static/portfolio.js.
+         "projects" consulta la API real (GET /proyectos). -->
+    <div class="hero-term">
+      <div class="term" id="terminal" role="region" aria-label="Interactive terminal">
+        <div class="term-bar"><span></span><span></span><span></span><p>hugo@portfolio: ~</p></div>
+        <div class="term-body" id="termOutput" aria-live="polite"></div>
+        <form class="term-form" id="termForm" autocomplete="off">
+          <label for="termInput">~$</label>
+          <input id="termInput" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="help" aria-describedby="termHint">
+        </form>
+      </div>
+      <p class="sr-only" id="termHint" data-i18n="term.hint">Type a command and press Enter, or use the buttons below.</p>
+      <div class="term-chips" aria-label="Suggested commands">
+        <button type="button" data-cmd="whoami">whoami</button>
+        <button type="button" data-cmd="projects">projects</button>
+        <button type="button" data-cmd="projects --tag security">projects --tag security</button>
+        <button type="button" data-cmd="skills">skills</button>
+        <button type="button" data-cmd="contact">contact</button>
+        <button type="button" data-cmd="sudo hire-hugo">sudo hire-hugo</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about">
+    <div class="about-avatar">
+      <img src="{{ url_for('static', filename='foto.jpg') }}" alt="Portrait of Hugo Maldonado" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <span class="avatar-fallback">HM</span>
+    </div>
+    <div class="about-text">
+      <span class="tag" data-i18n="about.tag">About me</span>
+      <h2 data-i18n="about.title">A little about my story</h2>
+      <p data-i18n="about.p1">I'm studying Artificial Intelligence Engineering and building my skills through hands-on projects: a Flask task manager, a Space Invaders clone, a data analysis of crime incidence in Mexico, and a real-time face filter with OpenCV.</p>
+      <p data-i18n="about.p2">My goal is to combine AI with cybersecurity and become a specialist in that field. Right now I'm working through Python for data, then machine learning.</p>
+      <p data-i18n="about.p3">Before code, I studied veterinary medicine, lived in the Mexican Caribbean and New York, opened a restaurant and became a bilingual interpreter.</p>
+      <a href="https://krma12.github.io/mi-bitacora/" class="about-link" target="_blank" rel="noopener" data-i18n="about.link">Read the full story in my logbook ↗</a>
+      <!-- Estas cifras se calculan solas desde la base de datos (ver resources.py) -->
+      <div class="stats">
+        <div class="stat"><h3>{{ proyectos|length }}</h3><span data-i18n="stats.projects">Projects</span></div>
+        <div class="stat"><h3>{{ total_tecnologias }}</h3><span data-i18n="stats.tools">Tools & concepts in my projects</span></div>
+        <div class="stat"><h3>4</h3><span data-i18n="stats.areas">Areas: web, data, vision, security</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag" data-i18n="skills.tag">What I do</span>
+      <h2 data-i18n="skills.title">Skills & tools</h2>
+      <p data-i18n="skills.sub">The tools I've used in my projects so far.</p>
+    </div>
+    <div class="skills-grid">
+      <article class="skill-card">
+        <div class="skill-icon">🐍</div>
+        <h3 data-i18n="sk1.t">Python & Data</h3>
+        <p data-i18n="sk1.p">Python, NumPy, Pandas and Jupyter for data cleaning and exploratory analysis.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🤖</div>
+        <h3 data-i18n="sk2.t">Computer Vision</h3>
+        <p data-i18n="sk2.p">OpenCV and Mediapipe for real-time face detection and augmented reality filters.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">📊</div>
+        <h3 data-i18n="sk3.t">Web Backend</h3>
+        <p data-i18n="sk3.p">Flask, SQLite and SQLAlchemy, REST APIs and Jinja2 templates, plus object-oriented design.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🛠️</div>
+        <h3 data-i18n="sk4.t">Tools & Games</h3>
+        <p data-i18n="sk4.p">Git and GitHub for version control, plus Pygame for game development.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🛡️</div>
+        <h3 data-i18n="sk5.t">Cybersecurity</h3>
+        <p data-i18n="sk5.p">Kali Linux and isolated home labs for certification practice, and security-minded APIs.</p>
+      </article>
+      <article class="skill-card">
+        <div class="skill-icon">🌍</div>
+        <h3 data-i18n="sk6.t">Languages</h3>
+        <p data-i18n="sk6.p">Native Spanish and professional English (bilingual interpreter). Learning Portuguese, French, Arabic and German.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag" data-i18n="projects.tag">My work</span>
+      <h2 data-i18n="projects.title">Featured projects</h2>
+      <p data-i18n="projects.sub">Things I've built, with the code on GitHub.</p>
+    </div>
+    <!-- Filtros (los genera portfolio.js según las tecnologías) + interruptor Tarjetas / JSON -->
+    <div class="projects-toolbar">
+      <div class="filters" id="filters" role="group" aria-label="Filter projects by technology"></div>
+      <div class="view-toggle" role="group" aria-label="Projects view">
+        <button type="button" id="viewCards" aria-pressed="true" data-i18n="view.cards">Cards</button>
+        <button type="button" id="viewJson" aria-pressed="false">JSON</button>
+      </div>
+    </div>
+
+    <div class="json-panel" id="jsonPanel" hidden>
+      <div class="json-head">
+        <span class="metodo">GET</span><span>/proyectos</span>
+        <span class="dim" id="jsonNote"></span>
+        <span class="estado" id="jsonStatus"></span>
+      </div>
+      <pre id="jsonOutput" tabindex="0" aria-label="API response"></pre>
+    </div>
+
+    <div class="projects-grid" id="projectsGrid">
+      {% for proyecto in proyectos %}
+      <article class="project-card" data-id="{{ proyecto.id }}" data-tech="{{ proyecto.lista_tecnologias|join('|')|lower }}">
+        <div class="project-thumb" aria-hidden="true">{{ proyecto.emoji or '🚀' }}</div>
+        <div class="project-body">
+          <h3>{{ proyecto.titulo }}</h3>
+          <p data-lang="en">{{ proyecto.descripcion }}</p>
+          <p data-lang="es">{{ proyecto.descripcion_es or proyecto.descripcion }}</p>
+          {% if proyecto.resultado %}
+          <p class="project-metric" data-lang="en">Key result: {{ proyecto.resultado }}</p>
+          <p class="project-metric" data-lang="es">Resultado clave: {{ proyecto.resultado_es or proyecto.resultado }}</p>
+          {% endif %}
+          {% if proyecto.lista_tecnologias %}
+          <ul class="tech-tags" aria-label="Technologies">
+            {% for tecnologia in proyecto.lista_tecnologias %}<li>{{ tecnologia }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+          <div class="project-links">
+            {% if proyecto.repo_url %}
+            <a href="{{ proyecto.repo_url }}" class="project-link" target="_blank" rel="noopener">GitHub ↗</a>
+            {% endif %}
+            {% if proyecto.demo_url %}
+            <a href="{{ proyecto.demo_url }}" class="project-link" target="_blank" rel="noopener" data-i18n="projects.live">Live site ↗</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <div class="empty-state">
+        <p data-i18n="projects.empty">No projects yet — add your first one through the API and it'll show up here automatically.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <h2 data-i18n="contact.title">Let's build something together</h2>
+      <p data-i18n="contact.sub">Have a project in mind or just want to say hi? I'd love to hear from you.</p>
+      {% if formspree_id %}
+      <!-- Formulario conectado a Formspree: los mensajes llegan a mi correo -->
+      <form class="contact-form" action="https://formspree.io/f/{{ formspree_id }}" method="POST">
+        <input type="hidden" name="_subject" value="New message from your portfolio">
+        <input type="text" name="_gotcha" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label for="name" data-i18n="form.name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" data-i18n-placeholder="form.name_ph" required>
+        <label for="email" data-i18n="form.email">Email</label>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required>
+        <label for="message" data-i18n="form.message">Message</label>
+        <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" data-i18n-placeholder="form.message_ph" required></textarea>
+        <button type="submit" class="btn btn-primary" data-i18n="form.send">Send message</button>
+      </form>
+      {% else %}
+      <!-- Sin FORMSPREE_ID configurado: botones directos en vez de un formulario que no enviaría nada -->
+      <div class="contact-actions">
+        <a href="mailto:sowyer99@hotmail.com" class="btn btn-primary" data-i18n="contact.email">Email me</a>
+        <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" class="btn btn-secondary" target="_blank" rel="noopener">LinkedIn ↗</a>
+      </div>
+      {% endif %}
+      <p class="contact-alt"><span data-i18n="contact.alt">or email me directly at</span> <a href="mailto:sowyer99@hotmail.com">sowyer99@hotmail.com</a></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-socials">
+      <a href="mailto:sowyer99@hotmail.com" aria-label="Email">✉</a>
+      <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" aria-label="LinkedIn" target="_blank" rel="noopener">in</a>
+      <a href="https://github.com/krma12" aria-label="GitHub" target="_blank" rel="noopener">gh</a>
+      <a href="https://krma12.github.io/mi-bitacora/" aria-label="My logbook" target="_blank" rel="noopener">📓</a>
+    </div>
+    <p>&copy; 2026 Hugo Maldonado. <span data-i18n="footer">Built with Flask, HTML & CSS.</span></p>
+  </div>
+</footer>
+
+<script>
+  // ---- Mobile menu toggle ----
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+
+  menuToggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', isOpen);
+    menuToggle.textContent = isOpen ? '✕' : '☰';
+  });
+
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', false);
+      menuToggle.textContent = '☰';
+    });
+  });
+
+  // ---- Light / dark theme toggle ----
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      root.setAttribute('data-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    } else {
+      root.removeAttribute('data-theme');
+      themeToggle.textContent = '🌙';
+    }
+  }
+
+  // localStorage puede fallar (modo privado, cookies bloqueadas): lo protegemos con try/catch
+  let storedTheme = null;
+  try { storedTheme = localStorage.getItem('theme'); } catch (e) {}
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  });
+
+  // La terminal (portfolio.js) usa esta función para el comando "theme dark|light"
+  window.portfolioTheme = (tema) => {
+    applyTheme(tema);
+    try { localStorage.setItem('theme', tema); } catch (e) {}
+  };
+</script>
+
+<!-- Terminal, filtros, vista JSON e idiomas -->
+<script src="{{ url_for('static', filename='portfolio.js') }}"></script>
+
+</body>
+</html>

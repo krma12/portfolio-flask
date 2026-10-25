@@ -11,3 +11,9 @@ instance/
 # Configuración de IDEs
 .idea/
 .vscode/
+
+# Caché de las pruebas automáticas
+.pytest_cache/
+
+# Variables de entorno locales (aquí podría ir tu clave: nunca se sube)
+.env

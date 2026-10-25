@@ -1,61 +1,88 @@
+import hmac
+from functools import wraps
+
+from flask import current_app, make_response, render_template, request
 from flask_restful import Resource, reqparse
-from flask import render_template, make_response
-from models import db, Proyecto
+
+from models import Proyecto, db
 
 
-class PrimerRecurso(Resource):
-    def get(self):
-        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        
+# ---------------------------------------------------------------------------
+# Seguridad: solo quien tenga la clave puede crear, editar o borrar.
+# Leer (GET) sigue siendo público, porque el portfolio es para mostrarse.
+# ---------------------------------------------------------------------------
+def requiere_clave(metodo):
+    """
+    Decorador: envuelve un método (post, put, delete) y, antes de ejecutarlo,
+    revisa que la petición traiga el header  X-API-Key  con la clave correcta.
+    """
+    @wraps(metodo)
+    def envoltura(*args, **kwargs):
+        clave_correcta = current_app.config.get('API_KEY')
 
-class NombreAleatorio(Resource):
-    def get(self):
-        stock = 40
-        vendidos = 30
-        faltantes = 10 
+        # Si el servidor no tiene clave configurada, nadie puede escribir.
+        # (Fallar "cerrado" es más seguro que dejar la API abierta por olvido.)
+        if not clave_correcta:
+            return {'mensaje': 'La API está en modo solo lectura'}, 403
 
-        return {'Vendidos': vendidos, 'Faltantes': faltantes, 'Stock': stock}
+        clave_recibida = request.headers.get('X-API-Key', '')
+
+        # compare_digest compara en tiempo constante: no revela, por lo que
+        # tarda en responder, cuántos caracteres de la clave acertaste.
+        if not hmac.compare_digest(clave_recibida.encode(), clave_correcta.encode()):
+            return {'mensaje': 'Clave inválida o faltante'}, 401
+
+        return metodo(*args, **kwargs)
+    return envoltura
+
 
 class PaginaInicio(Resource):
-     # Renderizamos la plantilla HTML y la guardamos en la variable html
     def get(self):
-        # Traemos todos los proyectos guardados para pasárselos al HTML
-        proyectos = Proyecto.query.all()
-        # render_template puede recibir variables (aquí "proyectos") que
-        # quedan disponibles dentro del archivo .html gracias a Jinja2
-        sitio_web_renderizado = render_template('landing_page.html', proyectos=proyectos)
-        # Creamos una respuesta HTTP con el contenido
-        # del sitio web renderizado y la devolvemos al cliente
+        # Traemos los proyectos ordenados para pasárselos al HTML
+        proyectos = Proyecto.query.order_by(Proyecto.orden, Proyecto.id).all()
+
+        # Tecnologías distintas usadas en todos los proyectos (para las estadísticas)
+        tecnologias = {t for p in proyectos for t in p.lista_tecnologias}
+
+        # render_template puede recibir variables que quedan disponibles
+        # dentro del archivo .html gracias a Jinja2
+        sitio_web_renderizado = render_template(
+            'landing_page.html',
+            proyectos=proyectos,
+            total_tecnologias=len(tecnologias),
+            formspree_id=current_app.config.get('FORMSPREE_ID'),
+        )
         return make_response(sitio_web_renderizado)
 
 
-# reqparse valida los datos que llegan en el body de un POST/PUT,
-# en vez de leerlos "a mano". Si falta 'titulo', responde solo con
-# un error 400 automáticamente, sin que tengamos que revisarlo nosotros.
+# reqparse valida los datos que llegan en el body de un POST/PUT.
+# Si falta 'titulo', responde solo con un error 400 automáticamente.
 parser = reqparse.RequestParser()
 parser.add_argument('titulo', type=str, required=True, help='El título es obligatorio')
 parser.add_argument('descripcion', type=str)
 parser.add_argument('resultado', type=str)
+parser.add_argument('descripcion_es', type=str)
+parser.add_argument('resultado_es', type=str)
 parser.add_argument('repo_url', type=str)
+parser.add_argument('demo_url', type=str)
+parser.add_argument('tecnologias', type=str)   # "Python, Flask, SQLite"
+parser.add_argument('emoji', type=str)
+parser.add_argument('orden', type=int, default=0)
+
+CAMPOS = ['titulo', 'descripcion', 'resultado', 'descripcion_es', 'resultado_es', 'repo_url', 'demo_url', 'tecnologias', 'emoji', 'orden']
 
 
 class ListaProyectos(Resource):
     """Maneja /proyectos -> la colección completa (listar y crear)."""
 
     def get(self):
-        # Proyecto.query.all() -> SELECT * FROM proyecto, pero en Python puro
-        proyectos = Proyecto.query.all()
+        proyectos = Proyecto.query.order_by(Proyecto.orden, Proyecto.id).all()
         return [p.to_dict() for p in proyectos]
 
+    @requiere_clave
     def post(self):
         datos = parser.parse_args()
-
-        nuevo = Proyecto(
-            titulo=datos['titulo'],
-            descripcion=datos['descripcion'],
-            resultado=datos['resultado'],
-            repo_url=datos['repo_url'],
-        )
+        nuevo = Proyecto(**{campo: datos[campo] for campo in CAMPOS})
 
         db.session.add(nuevo)   # lo prepara para guardar
         db.session.commit()     # lo guarda de verdad en proyectos.db
@@ -67,27 +94,29 @@ class ProyectoIndividual(Resource):
     """Maneja /proyectos/<id> -> un proyecto específico (leer, actualizar, borrar)."""
 
     def get(self, id):
-        proyecto = Proyecto.query.get(id)
+        # db.session.get() es la forma actual de SQLAlchemy 2
+        # (Proyecto.query.get() quedó marcado como obsoleto)
+        proyecto = db.session.get(Proyecto, id)
         if proyecto is None:
             return {'mensaje': 'Proyecto no encontrado'}, 404
         return proyecto.to_dict()
 
+    @requiere_clave
     def put(self, id):
-        proyecto = Proyecto.query.get(id)
+        proyecto = db.session.get(Proyecto, id)
         if proyecto is None:
             return {'mensaje': 'Proyecto no encontrado'}, 404
 
         datos = parser.parse_args()
-        proyecto.titulo = datos['titulo']
-        proyecto.descripcion = datos['descripcion']
-        proyecto.resultado = datos['resultado']
-        proyecto.repo_url = datos['repo_url']
+        for campo in CAMPOS:
+            setattr(proyecto, campo, datos[campo])
 
         db.session.commit()
         return proyecto.to_dict()
 
+    @requiere_clave
     def delete(self, id):
-        proyecto = Proyecto.query.get(id)
+        proyecto = db.session.get(Proyecto, id)
         if proyecto is None:
             return {'mensaje': 'Proyecto no encontrado'}, 404
 

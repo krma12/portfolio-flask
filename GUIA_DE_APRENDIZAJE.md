@@ -14,8 +14,10 @@ Servicios_Web/
 ├── models.py           # Define las tablas de la base de datos
 ├── requirements.txt    # Lista de librerías que el proyecto necesita
 ├── .gitignore           # Qué archivos NO subir a GitHub
-├── Templates/
+├── templates/
 │   └── landing_page.html
+├── tests/
+│   └── test_api.py
 └── instance/
     └── proyectos.db     # La base de datos (no se sube a GitHub)
 ```
@@ -105,7 +107,7 @@ Esto sigue el mismo patrón que usar Git: primero "preparas" el cambio (`add`, c
 
 Estas son formas de **consultar** datos:
 - `.query.all()` = "tráeme todas las filas" (equivalente a `SELECT * FROM proyecto`).
-- `.query.get(id)` = "tráeme la fila con este ID específico" (equivalente a `SELECT * FROM proyecto WHERE id = ...`).
+- `.query.get(id)` = "tráeme la fila con este ID específico" (equivalente a `SELECT * FROM proyecto WHERE id = ...`). En SQLAlchemy 2 la forma actual es `db.session.get(Proyecto, id)`, que es la que usa ahora `resources.py`.
 
 ### SQLite y la carpeta `instance/`
 
@@ -197,7 +199,94 @@ Los entrevistadores a veces preguntan "cuéntame de un bug que resolviste" — a
 
 ---
 
-## 9. Preguntas típicas de entrevista relacionadas con este proyecto
+## 9. Seguridad de la API (lo que agregamos para publicarla)
+
+Mientras el portfolio solo corría en tu computadora, cualquiera "podía" borrar proyectos… pero ese "cualquiera" eras tú. Al publicarlo en internet eso cambia: sin protección, cualquier persona podría hacer `DELETE /proyectos/1`. Esto es justo lo que un entrevistador de ciberseguridad revisaría.
+
+### La clave de API (`X-API-Key`)
+
+- **Leer** (`GET`) sigue siendo público: el portfolio existe para mostrarse.
+- **Escribir** (`POST`, `PUT`, `DELETE`) exige mandar la clave en un *header*: `X-API-Key: tu-clave`.
+- Lo implementamos con un **decorador** (`@requiere_clave` en `resources.py`): una función que "envuelve" a otra y revisa algo antes de dejarla correr. Así no repetimos el mismo `if` en cada método.
+
+### Variables de entorno: los secretos no van en el código
+
+La clave se lee con `os.environ.get('PORTFOLIO_API_KEY')`. Si la escribieras directo en `app.py`, terminaría en GitHub y cualquiera la vería. Regla: **todo secreto vive fuera del código**.
+
+### Fallar "cerrado" (*fail closed*)
+
+Si el servidor no tiene clave configurada, la API responde `403` a toda escritura, en vez de quedar abierta. Pregunta de entrevista: *"¿Qué pasa si alguien olvida configurar la clave?"* → "La API se vuelve solo lectura; un error de configuración no puede abrir un hueco de seguridad".
+
+### `hmac.compare_digest` en vez de `==`
+
+`==` deja de comparar en cuanto encuentra el primer carácter distinto, así que tarda un poquito más cuando aciertas más caracteres. Un atacante podría medir esos tiempos (*timing attack*). `compare_digest` siempre tarda lo mismo.
+
+### `debug=True` solo en tu PC
+
+El modo debug de Flask muestra una consola interactiva cuando hay un error, y desde ahí se puede **ejecutar código Python en el servidor**. Por eso ahora solo se activa con `FLASK_DEBUG=1`.
+
+### Códigos de estado que usamos
+
+| Código | Significa | Cuándo |
+|---|---|---|
+| `200` | OK | Todo bien |
+| `201` | Created | Se creó un proyecto |
+| `400` | Bad Request | Faltan datos (ej. sin `titulo`) |
+| `401` | Unauthorized | Falta la clave o es incorrecta |
+| `403` | Forbidden | La API está en modo solo lectura |
+| `404` | Not Found | Ese proyecto no existe |
+
+### El campo trampa (*honeypot*) del formulario
+
+El formulario de contacto tiene un campo invisible (`_gotcha`). Una persona no lo ve y lo deja vacío; un bot de spam llena todos los campos. Si llega lleno, Formspree descarta el mensaje.
+
+---
+
+## 10. Pruebas automáticas (pytest)
+
+En lugar de probar a mano cada ruta, escribimos pruebas en `tests/test_api.py` que se corren con `python -m pytest`. Usan una **base de datos en memoria** (`sqlite:///:memory:`), que se crea y se borra en cada prueba, así nunca tocan tus datos reales.
+
+`app.test_client()` simula un navegador: hace peticiones a la app sin levantar el servidor.
+
+Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 15 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
+
+---
+
+## 11. Un bug que solo aparece en servidores: `Templates` vs `templates`
+
+La carpeta se llamaba `Templates` (con mayúscula). Flask busca `templates` (minúscula). En Windows funcionaba porque Windows no distingue mayúsculas de minúsculas en los nombres de archivo; en Linux (donde viven casi todos los servidores) la página daba **error 500**. Buena historia para la sección de bugs: *"funciona en mi máquina"* no es suficiente.
+
+---
+
+## 12. La parte interactiva: JavaScript que consume tu propia API
+
+Todo vive en `static/portfolio.js`, en JavaScript puro (sin frameworks).
+
+### `fetch()`: el frontend le habla al backend
+
+La terminal (`projects`) y la vista JSON llaman a `fetch("/proyectos")`. Es exactamente lo que harías con `Invoke-RestMethod` en PowerShell, pero desde el navegador. Por eso el portfolio **demuestra** que la API funciona en vez de solo decirlo. `async` / `await` sirven para esperar la respuesta sin congelar la página.
+
+### Atributos `data-*`: el HTML le pasa información al JavaScript
+
+- `data-tech="python|opencv"` en cada tarjeta → el filtro sabe qué tecnologías tiene.
+- `data-cmd="whoami"` en cada botón → la terminal sabe qué comando escribir.
+- `data-i18n="hero.title"` → el sistema de idiomas sabe qué traducción poner.
+
+### Idiomas (i18n)
+
+*i18n* es la abreviatura de *internationalization* (18 letras entre la i y la n). Los textos fijos de la página se traducen con un diccionario en JavaScript. Los proyectos guardan sus dos versiones en la base de datos (`descripcion` y `descripcion_es`), y CSS muestra solo la del idioma activo según `<html lang="...">`.
+
+### Seguridad también en el frontend: escapar texto (XSS)
+
+La terminal muestra lo que el usuario escribe. Si lo insertáramos tal cual con `innerHTML`, alguien podría escribir `<img src=x onerror=alert(1)>` y ejecutar código (*Cross-Site Scripting*, XSS). La función `escapar()` convierte `<` y `>` en texto inofensivo antes de mostrarlo. Pregunta de entrevista: *"¿Qué es XSS y cómo lo previenes?"*
+
+### Accesibilidad
+
+La terminal usa `aria-live="polite"` para que los lectores de pantalla anuncien las respuestas, los botones de filtro usan `aria-pressed`, y si el usuario pidió menos movimiento (`prefers-reduced-motion`) no se anima la escritura.
+
+---
+
+## 13. Preguntas típicas de entrevista relacionadas con este proyecto
 
 - ¿Qué es una API REST y cómo la implementaste?
 - ¿Cuál es la diferencia entre `GET`, `POST`, `PUT` y `DELETE`?
@@ -207,9 +296,15 @@ Los entrevistadores a veces preguntan "cuéntame de un bug que resolviste" — a
 - ¿Cómo estructuras un proyecto Flask para que sea mantenible?
 - ¿Qué es Jinja2 y cómo se conecta el backend con el HTML?
 - Describe el flujo completo de un `POST`: desde que el cliente envía datos, hasta que quedan guardados en la base de datos.
+- ¿Cómo protegiste tu API? ¿Por qué la clave no está en el código?
+- ¿Qué es un *timing attack* y cómo lo evitaste?
+- ¿Por qué no se debe usar `debug=True` en producción?
+- ¿Qué diferencia hay entre `401` y `403`?
+- ¿Qué es XSS y cómo lo evitaste en la terminal?
+- ¿Cómo consume tu frontend tu propia API?
 
 ---
 
-## 10. Lo que sigue
+## 14. Lo que sigue
 
 Este proyecto es la base (etapa 1) de un roadmap más largo hacia AI engineering: después de esto, el siguiente escalón es aprender Python para datos (NumPy, Pandas), seguido de machine learning clásico (scikit-learn), servir modelos con una API (como ya sabes hacer aquí), deep learning, y finalmente LLMs/RAG. Cada etapa reutiliza lo que ya aprendiste — este CRUD, por ejemplo, es exactamente el mismo patrón que usarás para servir un modelo de IA más adelante.
