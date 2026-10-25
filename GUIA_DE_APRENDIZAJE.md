@@ -248,7 +248,7 @@ En lugar de probar a mano cada ruta, escribimos pruebas en `tests/test_api.py` q
 
 `app.test_client()` simula un navegador: hace peticiones a la app sin levantar el servidor.
 
-Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 16 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
+Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 22 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
 
 ---
 
@@ -286,7 +286,19 @@ La terminal usa `aria-live="polite"` para que los lectores de pantalla anuncien 
 
 ---
 
-## 13. Preguntas típicas de entrevista relacionadas con este proyecto
+## 13. Automatizar: sincronizar con GitHub
+
+`sync_github.py` consulta la **API pública de GitHub** (`https://api.github.com/users/krma12/repos`) y agrega a la base de datos los repos que todavía no están. Es tu API *consumiendo otra API*.
+
+- Usa `urllib` (viene con Python, no hay que instalar nada) y manda un `User-Agent`, porque GitHub lo exige.
+- **Idempotente:** puedes correrlo 100 veces y el resultado es el mismo; no duplica proyectos porque compara por `repo_url`. Palabra que suma en entrevistas.
+- **No destructivo:** solo rellena campos vacíos, nunca pisa lo que escribiste a mano.
+- Se programa como *scheduled task* (tarea programada, como un *cron job*) en PythonAnywhere para correr solo cada día.
+- Las pruebas usan repos falsos con la misma forma que la respuesta de GitHub, así no dependen de internet. A eso se le llama *mockear* datos.
+
+---
+
+## 14. Preguntas típicas de entrevista relacionadas con este proyecto
 
 - ¿Qué es una API REST y cómo la implementaste?
 - ¿Cuál es la diferencia entre `GET`, `POST`, `PUT` y `DELETE`?
@@ -302,9 +314,10 @@ La terminal usa `aria-live="polite"` para que los lectores de pantalla anuncien 
 - ¿Qué diferencia hay entre `401` y `403`?
 - ¿Qué es XSS y cómo lo evitaste en la terminal?
 - ¿Cómo consume tu frontend tu propia API?
+- ¿Qué significa que un proceso sea idempotente? ¿Por qué importa en una sincronización?
 
 ---
 
-## 14. Lo que sigue
+## 15. Lo que sigue
 
 Este proyecto es la base (etapa 1) de un roadmap más largo hacia AI engineering: después de esto, el siguiente escalón es aprender Python para datos (NumPy, Pandas), seguido de machine learning clásico (scikit-learn), servir modelos con una API (como ya sabes hacer aquí), deep learning, y finalmente LLMs/RAG. Cada etapa reutiliza lo que ya aprendiste — este CRUD, por ejemplo, es exactamente el mismo patrón que usarás para servir un modelo de IA más adelante.

@@ -8,6 +8,7 @@ Personal portfolio website built with Flask, SQLAlchemy, and a REST API for mana
 - **Filter projects by technology** (Python, Computer Vision, Web, Data, Security, Games), with counts.
 - **"View as JSON"** toggle: shows the real response of `GET /proyectos`, syntax-highlighted, with status code and response time.
 - **English / Spanish** toggle for the whole page and the terminal. Project descriptions are stored in both languages in the database.
+- **Automatic sync with GitHub:** new public repos appear on the site by themselves (see below).
 - Responsive landing page (hero, about, skills, projects, contact) with light/dark mode.
 - Projects render dynamically from the database, each with its technologies, key result, GitHub link and live demo (when there is one). Forked coursework repos are labeled "Fork · Coursework".
 - Stats calculated automatically from the data (number of projects and tools used).
@@ -43,9 +44,11 @@ portfolio-flask/
 ├── resources.py        # Route logic (GET/POST/PUT/DELETE) + API key check
 ├── models.py           # Proyecto model (SQLAlchemy)
 ├── seed.py             # Loads my real projects into the database
+├── sync_github.py      # Adds new GitHub repos automatically
 ├── requirements.txt    # Pinned dependencies
 ├── tests/
-│   └── test_api.py     # Automated tests for the API and the page
+│   ├── test_api.py     # Automated tests for the API and the page
+│   └── test_sync.py    # Tests for the GitHub sync
 ├── templates/
 │   └── landing_page.html
 └── static/
@@ -103,6 +106,31 @@ $env:PORTFOLIO_API_KEY = "a-long-random-secret"
 python app.py
 ```
 
+## Automatic sync with GitHub
+
+```
+python sync_github.py
+```
+
+Reads my public repos from the GitHub API and **adds any repo that isn't on the site yet**. Existing projects are never overwritten; only empty fields get filled in, so hand-written texts (like the Spanish descriptions) are kept.
+
+Each new project is built from the repo's **About** settings on GitHub:
+
+| On GitHub | On the site |
+|---|---|
+| Description | Project description |
+| Website | "Live site" button |
+| Topics (`python`, `flask`, `opencv`…) | Technology tags (and filters) |
+| Language | Also added as a technology |
+| Fork | "Fork · Coursework" badge |
+
+To hide a repo, add the topic `hide-from-portfolio`. Archived repos are skipped.
+
+In production it runs once a day as a PythonAnywhere **scheduled task**:
+```
+cd /home/krma12/portfolio-flask && venv/bin/python sync_github.py
+```
+
 ## API endpoints
 
 | Method | Endpoint          | Description         | Key required |
@@ -128,7 +156,7 @@ Without the key, the API answers `401 Unauthorized`.
 python -m pytest
 ```
 
-16 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, and fork badges. They use an in-memory database, so they never touch `proyectos.db`.
+22 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, fork badges, and the GitHub sync (new repos added, hand-written texts preserved, hidden/archived repos skipped). They use an in-memory database, so they never touch `proyectos.db`.
 
 ## More about me
 
