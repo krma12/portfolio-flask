@@ -88,3 +88,34 @@ def test_ayudantes():
     assert titulo_bonito("Space_Invaders") == "Space Invaders"
     assert titulo_bonito("analisis-rnid-mexico") == "Analisis Rnid Mexico"
     assert tecnologias_de({"language": "Python", "topics": ["kali-linux", "python"]}) == "Python, Kali Linux"
+
+
+# ---------- Modo remoto (el que usa GitHub Actions) ----------
+
+def test_sincronizar_remoto_solo_agrega_lo_nuevo():
+    from sync_github import sincronizar_remoto
+
+    llamadas = []
+
+    def pedir_falso(url, metodo="GET", datos=None, clave=None):
+        llamadas.append((metodo, url, clave))
+        if metodo == "GET":
+            return 200, [{"repo_url": "https://github.com/krma12/Filtro_Facial", "orden": 4}]
+        return 201, {"titulo": datos["titulo"], "orden": datos["orden"]}
+
+    agregados = sincronizar_remoto(
+        [repo("Filtro_Facial"), repo("Nuevo_Repo"), repo("Oculto", topics=["hide-from-portfolio"])],
+        "https://ejemplo.com/", "clave", pedir=pedir_falso,
+    )
+    assert agregados == ["Nuevo Repo"]
+    assert llamadas[-1] == ("POST", "https://ejemplo.com/proyectos", "clave")
+
+
+def test_sincronizar_remoto_avisa_si_la_clave_falla():
+    from sync_github import sincronizar_remoto
+
+    def pedir_falso(url, metodo="GET", datos=None, clave=None):
+        return (200, []) if metodo == "GET" else (401, {"mensaje": "Clave inválida"})
+
+    with pytest.raises(RuntimeError):
+        sincronizar_remoto([repo("Nuevo")], "https://ejemplo.com", "mala", pedir=pedir_falso)

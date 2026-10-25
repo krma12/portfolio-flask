@@ -248,7 +248,7 @@ En lugar de probar a mano cada ruta, escribimos pruebas en `tests/test_api.py` q
 
 `app.test_client()` simula un navegador: hace peticiones a la app sin levantar el servidor.
 
-Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 22 pruebas automáticas que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
+Pregunta de entrevista: *"¿Cómo sabes que tu API funciona?"* → "Tengo 24 pruebas automáticas que GitHub corre solo en cada push que verifican lecturas, la protección con clave, validaciones y el modo solo lectura".
 
 ---
 
@@ -293,7 +293,18 @@ La terminal usa `aria-live="polite"` para que los lectores de pantalla anuncien 
 - Usa `urllib` (viene con Python, no hay que instalar nada) y manda un `User-Agent`, porque GitHub lo exige.
 - **Idempotente:** puedes correrlo 100 veces y el resultado es el mismo; no duplica proyectos porque compara por `repo_url`. Palabra que suma en entrevistas.
 - **No destructivo:** solo rellena campos vacíos, nunca pisa lo que escribiste a mano.
-- Se programa como *scheduled task* (tarea programada, como un *cron job*) en PythonAnywhere para correr solo cada día.
+- Tiene dos modos: **local** (escribe en la base de datos) y **remoto** (`--remoto URL`), que agrega los proyectos llamando a tu propia API con `POST /proyectos` y la clave. Así tu API se usa a sí misma para automatizarse.
+
+### GitHub Actions (CI/CD)
+
+PythonAnywhere gratis no permite tareas programadas, así que la automatización vive en **GitHub Actions** (`.github/workflows/portfolio.yml`):
+
+- **CI (*Continuous Integration*):** en cada `push`, GitHub instala todo en una máquina limpia y corre tus pruebas. Si algo se rompe, te avisa con una ❌ en el commit.
+- **Cron:** `"0 14 * * *"` significa «todos los días a las 14:00 UTC». Los 5 campos son minuto, hora, día del mes, mes y día de la semana.
+- **Secrets:** la clave de la API se guarda cifrada en GitHub (*Settings → Secrets*) y se lee como `${{ secrets.PORTFOLIO_API_KEY }}`. Nunca aparece en el código ni en los logs.
+- **Variables:** datos que no son secretos, como la URL del sitio, van en *Variables* (`${{ vars.PORTFOLIO_URL }}`).
+
+Pregunta de entrevista: *"¿Cómo automatizarías un despliegue o una tarea recurrente?"* → *"Con GitHub Actions: un workflow con cron, los secretos en GitHub Secrets y pruebas en cada push"*.
 - Las pruebas usan repos falsos con la misma forma que la respuesta de GitHub, así no dependen de internet. A eso se le llama *mockear* datos.
 
 ---

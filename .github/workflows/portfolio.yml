@@ -1,0 +1,51 @@
+# =============================================================
+# GitHub Actions del portfolio
+#   1. tests  -> corre las pruebas en cada push y pull request
+#   2. sync   -> cada mañana agrega al portfolio publicado los repos
+#                nuevos de GitHub, usando la API del propio portfolio
+#
+# Configuración (una sola vez, en GitHub):
+#   Settings → Secrets and variables → Actions
+#     - Secret   PORTFOLIO_API_KEY = la misma clave del archivo WSGI
+#     - Variable PORTFOLIO_URL     = https://hugoportfolio.pythonanywhere.com
+# =============================================================
+name: Portfolio
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 14 * * *"   # todos los días 14:00 UTC = 8:00 a. m. en CDMX
+  workflow_dispatch:        # botón "Run workflow" para correrlo a mano
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -v
+
+  sync:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Solo usa la librería estándar de Python: no necesita instalar nada
+      - name: Agregar repos nuevos al portfolio
+        env:
+          PORTFOLIO_API_KEY: ${{ secrets.PORTFOLIO_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # evita el límite de consultas de GitHub
+        run: python sync_github.py --remoto "${{ vars.PORTFOLIO_URL }}"

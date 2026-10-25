@@ -1,7 +1,16 @@
 """
 Sincroniza el portfolio con tus repositorios públicos de GitHub.
 
+Dos formas de usarlo:
+
     python sync_github.py
+        Modo local: escribe directo en la base de datos (tu PC o la consola
+        de PythonAnywhere).
+
+    python sync_github.py --remoto https://hugoportfolio.pythonanywhere.com
+        Modo remoto: NO toca la base de datos; agrega los repos nuevos
+        llamando a tu propia API (POST /proyectos) con la clave secreta
+        PORTFOLIO_API_KEY. Es el que usa GitHub Actions cada día.
 
 Qué hace:
   - Consulta la API pública de GitHub: https://api.github.com/users/<usuario>/repos
@@ -19,11 +28,13 @@ Lo que toma de cada repo (lo editas en GitHub, en el engrane ⚙ de "About"):
 
 Para ocultar un repo del portfolio, ponle el topic:  hide-from-portfolio
 
-En PythonAnywhere se programa como "Scheduled task" para que corra solo cada día.
+La automatización diaria vive en .github/workflows/portfolio.yml (GitHub Actions).
 """
 
 import json
 import os
+import sys
+import urllib.error
 import urllib.request
 
 USUARIO = os.environ.get("GITHUB_USER", "krma12")
@@ -91,6 +102,20 @@ def debe_mostrarse(repo):
     )
 
 
+def datos_proyecto(repo, orden):
+    """Traduce un repo de GitHub a los campos de un Proyecto."""
+    return {
+        "titulo": titulo_bonito(repo["name"]),
+        "descripcion": repo.get("description") or "",
+        "repo_url": repo["html_url"].rstrip("/"),
+        "demo_url": repo.get("homepage") or None,
+        "tecnologias": tecnologias_de(repo),
+        "emoji": EMOJIS.get(repo.get("language"), "🚀"),
+        "es_fork": bool(repo.get("fork")),
+        "orden": orden,
+    }
+
+
 def sincronizar(repos, db, Proyecto):
     """
     Agrega los repos nuevos y rellena huecos en los existentes.
@@ -108,16 +133,7 @@ def sincronizar(repos, db, Proyecto):
         proyecto = existentes.get(url.lower())
 
         if proyecto is None:
-            proyecto = Proyecto(
-                titulo=titulo_bonito(repo["name"]),
-                descripcion=repo.get("description") or "",
-                repo_url=url,
-                demo_url=repo.get("homepage") or None,
-                tecnologias=tecnologias_de(repo),
-                emoji=EMOJIS.get(repo.get("language"), "🚀"),
-                es_fork=bool(repo.get("fork")),
-                orden=siguiente_orden,
-            )
+            proyecto = Proyecto(**datos_proyecto(repo, siguiente_orden))
             db.session.add(proyecto)
             siguiente_orden += 1
             agregados.append(proyecto.titulo)
@@ -143,13 +159,64 @@ def sincronizar(repos, db, Proyecto):
     return agregados, actualizados
 
 
-if __name__ == "__main__":
-    from app import app
-    from models import Proyecto, db
+# ---------------------------------------------------------------------------
+# Modo remoto: hablar con el portfolio publicado a través de su propia API
+# ---------------------------------------------------------------------------
+def pedir_json(url, metodo="GET", datos=None, clave=None):
+    """Hace una petición HTTP y devuelve (código, json)."""
+    cuerpo = json.dumps(datos).encode() if datos is not None else None
+    peticion = urllib.request.Request(url, data=cuerpo, method=metodo, headers={
+        "Content-Type": "application/json",
+        "User-Agent": "portfolio-sync",
+    })
+    if clave:
+        peticion.add_header("X-API-Key", clave)
+    try:
+        with urllib.request.urlopen(peticion, timeout=30) as respuesta:
+            return respuesta.status, json.load(respuesta)
+    except urllib.error.HTTPError as error:
+        # 401, 403, 404…: devolvemos el código para que quien llama decida qué hacer
+        return error.code, json.loads(error.read() or b"{}")
 
-    with app.app_context():
-        repos = obtener_repos()
-        agregados, actualizados = sincronizar(repos, db, Proyecto)
-        print(f"GitHub: {len(repos)} repos encontrados.")
-        print(f"Agregados ({len(agregados)}): {', '.join(agregados) or '—'}")
-        print(f"Actualizados ({len(actualizados)}): {', '.join(actualizados) or '—'}")
+
+def sincronizar_remoto(repos, url_base, clave, pedir=pedir_json):
+    """
+    Agrega al portfolio publicado los repos que todavía no tiene (POST /proyectos).
+    Solo agrega: editar se hace a mano, para nunca pisar lo que escribiste.
+    """
+    url_base = url_base.rstrip("/")
+    _, existentes = pedir(f"{url_base}/proyectos")
+    urls = {(p.get("repo_url") or "").rstrip("/").lower() for p in existentes}
+    siguiente_orden = max([p.get("orden") or 0 for p in existentes] + [-1]) + 1
+
+    agregados = []
+    for repo in repos:
+        if not debe_mostrarse(repo) or repo["html_url"].rstrip("/").lower() in urls:
+            continue
+        codigo, creado = pedir(f"{url_base}/proyectos", "POST", datos_proyecto(repo, siguiente_orden), clave)
+        if codigo != 201:
+            raise RuntimeError(f"No se pudo agregar {repo['name']}: {codigo} {creado}")
+        agregados.append(creado["titulo"])
+        siguiente_orden += 1
+    return agregados
+
+
+if __name__ == "__main__":
+    repos = obtener_repos()
+    print(f"GitHub: {len(repos)} repos encontrados.")
+
+    if "--remoto" in sys.argv:
+        url = sys.argv[sys.argv.index("--remoto") + 1]
+        clave = os.environ.get("PORTFOLIO_API_KEY")
+        if not clave:
+            sys.exit("Falta la variable PORTFOLIO_API_KEY.")
+        agregados = sincronizar_remoto(repos, url, clave)
+        print(f"Agregados en {url} ({len(agregados)}): {', '.join(agregados) or '—'}")
+    else:
+        from app import app
+        from models import Proyecto, db
+
+        with app.app_context():
+            agregados, actualizados = sincronizar(repos, db, Proyecto)
+            print(f"Agregados ({len(agregados)}): {', '.join(agregados) or '—'}")
+            print(f"Actualizados ({len(actualizados)}): {', '.join(actualizados) or '—'}")

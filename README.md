@@ -44,7 +44,9 @@ portfolio-flask/
 ├── resources.py        # Route logic (GET/POST/PUT/DELETE) + API key check
 ├── models.py           # Proyecto model (SQLAlchemy)
 ├── seed.py             # Loads my real projects into the database
-├── sync_github.py      # Adds new GitHub repos automatically
+├── sync_github.py      # Adds new GitHub repos automatically (local or --remoto)
+├── .github/workflows/
+│   └── portfolio.yml   # CI: tests on push + daily sync
 ├── requirements.txt    # Pinned dependencies
 ├── tests/
 │   ├── test_api.py     # Automated tests for the API and the page
@@ -126,10 +128,18 @@ Each new project is built from the repo's **About** settings on GitHub:
 
 To hide a repo, add the topic `hide-from-portfolio`. Archived repos are skipped.
 
-In production it runs once a day as a PythonAnywhere **scheduled task**:
-```
-cd /home/krma12/portfolio-flask && venv/bin/python sync_github.py
-```
+### Running it automatically (GitHub Actions)
+
+`.github/workflows/portfolio.yml` does two things:
+
+- **On every push / pull request:** installs the dependencies and runs the test suite.
+- **Every day at 8:00 a.m. (CDMX):** runs `python sync_github.py --remoto <site URL>`. In this mode the script doesn't touch any database: it adds new repos to the live site by calling the site's own API (`POST /proyectos`) with the API key. Only new projects are added; nothing is edited or deleted.
+
+One-time setup in the repo: **Settings → Secrets and variables → Actions**
+- Secret `PORTFOLIO_API_KEY`: the same key configured on the server.
+- Variable `PORTFOLIO_URL`: `https://hugoportfolio.pythonanywhere.com`
+
+You can also run it manually from the **Actions** tab → *Portfolio* → **Run workflow**.
 
 ## API endpoints
 
@@ -156,7 +166,11 @@ Without the key, the API answers `401 Unauthorized`.
 python -m pytest
 ```
 
-22 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, fork badges, and the GitHub sync (new repos added, hand-written texts preserved, hidden/archived repos skipped). They use an in-memory database, so they never touch `proyectos.db`.
+24 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, fork badges, and the GitHub sync (new repos added, hand-written texts preserved, hidden/archived repos skipped, and the remote mode that talks to the live API). They use an in-memory database, so they never touch `proyectos.db`.
+
+## Live site
+
+[hugoportfolio.pythonanywhere.com](https://hugoportfolio.pythonanywhere.com)
 
 ## More about me
 
