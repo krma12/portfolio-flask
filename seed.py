@@ -70,6 +70,7 @@ proyectos = [
         "descripcion_es": "Este mismo portfolio: los proyectos viven en una base de datos y se sirven con una API REST protegida con clave.",
         "resultado_es": "API CRUD protegida",
         "repo_url": "https://github.com/krma12/portfolio-flask",
+        "demo_url": "https://hugoportfolio.pythonanywhere.com/",
         "tecnologias": "Python, Flask, SQLAlchemy, REST API",
         "emoji": "🌐",
     },
