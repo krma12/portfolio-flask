@@ -90,7 +90,7 @@ proyectos = [
         "resultado": "4 vulnerabilities documented · SIEM/EDR lab in progress",
         "descripcion_es": "Laboratorio casero y aislado donde reproduzco y documento vulnerabilidades críticas de Windows (EternalBlue, DoublePulsar, BlueKeep, SMBGhost) y las traduzco en medidas defensivas.",
         "resultado_es": "4 vulnerabilidades documentadas · laboratorio SIEM/EDR en progreso",
-        "repo_url": "https://github.com/krma12/kali-win7-pentest-labs",
+        "repo_url": "https://github.com/krma12/cybersecurity-research-lab",
         "tecnologias": "Kali Linux, Networking, Cybersecurity, SMB, RDP",
         "emoji": "🛡️",
     },
