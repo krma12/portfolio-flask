@@ -92,7 +92,7 @@ def test_ayudantes():
 
 # ---------- Modo remoto (el que usa GitHub Actions) ----------
 
-def test_sincronizar_remoto_solo_agrega_lo_nuevo():
+def test_sincronizar_remoto_agrega_lo_nuevo():
     from sync_github import sincronizar_remoto
 
     llamadas = []
@@ -100,15 +100,56 @@ def test_sincronizar_remoto_solo_agrega_lo_nuevo():
     def pedir_falso(url, metodo="GET", datos=None, clave=None):
         llamadas.append((metodo, url, clave))
         if metodo == "GET":
-            return 200, [{"repo_url": "https://github.com/krma12/Filtro_Facial", "orden": 4}]
+            return 200, [{"id": 1, "titulo": "Face Filter", "repo_url": "https://github.com/krma12/Filtro_Facial",
+                          "descripcion": "Escrita a mano", "tecnologias": ["Python"], "orden": 4}]
         return 201, {"titulo": datos["titulo"], "orden": datos["orden"]}
 
-    agregados = sincronizar_remoto(
+    agregados, actualizados = sincronizar_remoto(
         [repo("Filtro_Facial"), repo("Nuevo_Repo"), repo("Oculto", topics=["hide-from-portfolio"])],
         "https://ejemplo.com/", "clave", pedir=pedir_falso,
     )
     assert agregados == ["Nuevo Repo"]
+    assert actualizados == []          # Face Filter ya estaba completo: no se toca
     assert llamadas[-1] == ("POST", "https://ejemplo.com/proyectos", "clave")
+
+
+def test_sincronizar_remoto_completa_descripcion_y_topics():
+    """El caso real: el repo se agregó vacío y después le pusiste descripción y topics en GitHub."""
+    from sync_github import sincronizar_remoto
+
+    enviados = {}
+
+    def pedir_falso(url, metodo="GET", datos=None, clave=None):
+        if metodo == "GET":
+            return 200, [{"id": 12, "titulo": "Asistente Personal", "repo_url": "https://github.com/krma12/asistente-personal",
+                          "descripcion": "", "descripcion_es": None, "emoji": "🐍", "demo_url": None,
+                          "tecnologias": ["Python"], "orden": 11, "es_fork": False}]
+        enviados.update(metodo=metodo, url=url, datos=datos)
+        return 200, datos
+
+    _, actualizados = sincronizar_remoto(
+        [repo("asistente-personal", description="Asistente diario con IA", topics=["chatbot", "python"])],
+        "https://ejemplo.com", "clave", pedir=pedir_falso,
+    )
+    assert actualizados == ["Asistente Personal"]
+    assert enviados["metodo"] == "PUT" and enviados["url"].endswith("/proyectos/12")
+    assert enviados["datos"]["descripcion"] == "Asistente diario con IA"
+    assert enviados["datos"]["tecnologias"] == "Python, Chatbot"
+    assert enviados["datos"]["emoji"] == "🐍"          # lo demás se conserva
+    assert "id" not in enviados["datos"]
+
+
+def test_sincronizar_remoto_no_pisa_lo_escrito_a_mano():
+    from sync_github import sincronizar_remoto
+
+    def pedir_falso(url, metodo="GET", datos=None, clave=None):
+        if metodo == "GET":
+            return 200, [{"id": 3, "titulo": "X", "repo_url": "https://github.com/krma12/X",
+                          "descripcion": "Mi texto", "tecnologias": ["Python", "Flask"], "es_fork": False}]
+        raise AssertionError("no debería mandar nada")
+
+    assert sincronizar_remoto([repo("X", description="Otra", topics=["flask"])],
+                              "https://ejemplo.com", "clave", pedir=pedir_falso) == ([], [])
 
 
 def test_sincronizar_remoto_avisa_si_la_clave_falla():

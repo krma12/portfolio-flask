@@ -15,8 +15,11 @@ Dos formas de usarlo:
 Qué hace:
   - Consulta la API pública de GitHub: https://api.github.com/users/<usuario>/repos
   - Si encuentra un repo que todavía no está en la base de datos, lo AGREGA.
-  - Si el proyecto ya existe, solo rellena los campos que estén vacíos.
-    Nunca pisa lo que escribiste a mano (descripción en español, emoji, etc.).
+  - Si el proyecto ya existe, completa lo que falte: la descripción y el link si
+    están vacíos, y agrega los topics nuevos a las tecnologías. Esto pasa también
+    en el modo remoto (GitHub Actions), así que si escribes la descripción o los
+    topics en GitHub después de crear el repo, aparecen solos al día siguiente.
+    Nunca pisa lo que escribiste a mano (descripción en español, emoji, título, etc.).
   - No borra nada: si eliminas un repo de GitHub, lo quitas tú desde la API.
 
 Lo que toma de cada repo (lo editas en GitHub, en el engrane ⚙ de "About"):
@@ -93,6 +96,41 @@ def tecnologias_de(repo):
     return ", ".join(lista)
 
 
+def unir_tecnologias(actuales, repo):
+    """
+    Junta las tecnologías que ya tiene el proyecto con las de GitHub (lenguaje + topics).
+    Nunca quita ninguna: solo agrega las que falten. Devuelve None si no hay nada nuevo.
+    """
+    actuales = [t.strip() for t in (actuales or []) if t and t.strip()]
+    ya = {t.lower() for t in actuales}
+    nuevas = [t.strip() for t in tecnologias_de(repo).split(",") if t.strip() and t.strip().lower() not in ya]
+    return ", ".join(actuales + nuevas) if nuevas else None
+
+
+def campos_a_completar(proyecto, repo):
+    """
+    Compara un proyecto del portfolio (como dict) con su repo de GitHub y devuelve
+    solo los campos que se pueden completar, SIN pisar lo que ya escribiste:
+      - descripcion y demo_url: solo si en el portfolio están vacíos
+      - tecnologias: agrega los topics nuevos de GitHub a los que ya había
+      - es_fork: lo marca si GitHub dice que es fork
+    """
+    cambios = {}
+    if not proyecto.get("descripcion") and repo.get("description"):
+        cambios["descripcion"] = repo["description"]
+    if not proyecto.get("demo_url") and repo.get("homepage"):
+        cambios["demo_url"] = repo["homepage"]
+    tecnologias = proyecto.get("tecnologias") or []
+    if isinstance(tecnologias, str):
+        tecnologias = tecnologias.split(",")
+    unidas = unir_tecnologias(tecnologias, repo)
+    if unidas:
+        cambios["tecnologias"] = unidas
+    if repo.get("fork") and not proyecto.get("es_fork"):
+        cambios["es_fork"] = True
+    return cambios
+
+
 def debe_mostrarse(repo):
     return (
         repo["name"] not in IGNORAR
@@ -139,20 +177,16 @@ def sincronizar(repos, db, Proyecto):
             agregados.append(proyecto.titulo)
             continue
 
-        # Ya existe: solo rellenamos lo que esté vacío, sin tocar lo escrito a mano
-        cambio = False
-        for campo, valor in (
-            ("descripcion", repo.get("description")),
-            ("demo_url", repo.get("homepage")),
-            ("tecnologias", tecnologias_de(repo)),
-        ):
-            if valor and not getattr(proyecto, campo):
-                setattr(proyecto, campo, valor)
-                cambio = True
-        if bool(repo.get("fork")) and not proyecto.es_fork:
-            proyecto.es_fork = True
-            cambio = True
-        if cambio:
+        # Ya existe: solo completamos lo que falte, sin tocar lo escrito a mano
+        cambios = campos_a_completar({
+            "descripcion": proyecto.descripcion,
+            "demo_url": proyecto.demo_url,
+            "tecnologias": proyecto.tecnologias,
+            "es_fork": proyecto.es_fork,
+        }, repo)
+        for campo, valor in cambios.items():
+            setattr(proyecto, campo, valor)
+        if cambios:
             actualizados.append(proyecto.titulo)
 
     db.session.commit()
@@ -181,24 +215,44 @@ def pedir_json(url, metodo="GET", datos=None, clave=None):
 
 def sincronizar_remoto(repos, url_base, clave, pedir=pedir_json):
     """
-    Agrega al portfolio publicado los repos que todavía no tiene (POST /proyectos).
-    Solo agrega: editar se hace a mano, para nunca pisar lo que escribiste.
+    Sincroniza el portfolio publicado a través de su API:
+      - Agrega los repos que todavía no tiene (POST /proyectos).
+      - En los que ya tiene, completa la descripción, el link y los topics
+        que falten (PUT /proyectos/<id>), sin pisar lo que escribiste a mano.
+    Devuelve (agregados, actualizados).
     """
     url_base = url_base.rstrip("/")
     _, existentes = pedir(f"{url_base}/proyectos")
-    urls = {(p.get("repo_url") or "").rstrip("/").lower() for p in existentes}
+    por_url = {(p.get("repo_url") or "").rstrip("/").lower(): p for p in existentes}
     siguiente_orden = max([p.get("orden") or 0 for p in existentes] + [-1]) + 1
 
-    agregados = []
+    agregados, actualizados = [], []
     for repo in repos:
-        if not debe_mostrarse(repo) or repo["html_url"].rstrip("/").lower() in urls:
+        if not debe_mostrarse(repo):
             continue
-        codigo, creado = pedir(f"{url_base}/proyectos", "POST", datos_proyecto(repo, siguiente_orden), clave)
-        if codigo != 201:
-            raise RuntimeError(f"No se pudo agregar {repo['name']}: {codigo} {creado}")
-        agregados.append(creado["titulo"])
-        siguiente_orden += 1
-    return agregados
+        proyecto = por_url.get(repo["html_url"].rstrip("/").lower())
+
+        if proyecto is None:
+            codigo, creado = pedir(f"{url_base}/proyectos", "POST", datos_proyecto(repo, siguiente_orden), clave)
+            if codigo != 201:
+                raise RuntimeError(f"No se pudo agregar {repo['name']}: {codigo} {creado}")
+            agregados.append(creado["titulo"])
+            siguiente_orden += 1
+            continue
+
+        cambios = campos_a_completar(proyecto, repo)
+        if not cambios:
+            continue
+        # PUT reemplaza el proyecto completo: mandamos todo lo que ya tenía + los cambios
+        datos = {k: v for k, v in proyecto.items() if k != "id"}
+        if isinstance(datos.get("tecnologias"), list):
+            datos["tecnologias"] = ", ".join(datos["tecnologias"])
+        datos.update(cambios)
+        codigo, respuesta = pedir(f"{url_base}/proyectos/{proyecto['id']}", "PUT", datos, clave)
+        if codigo != 200:
+            raise RuntimeError(f"No se pudo actualizar {proyecto['titulo']}: {codigo} {respuesta}")
+        actualizados.append(proyecto["titulo"])
+    return agregados, actualizados
 
 
 if __name__ == "__main__":
@@ -210,8 +264,9 @@ if __name__ == "__main__":
         clave = os.environ.get("PORTFOLIO_API_KEY")
         if not clave:
             sys.exit("Falta la variable PORTFOLIO_API_KEY.")
-        agregados = sincronizar_remoto(repos, url, clave)
+        agregados, actualizados = sincronizar_remoto(repos, url, clave)
         print(f"Agregados en {url} ({len(agregados)}): {', '.join(agregados) or '—'}")
+        print(f"Actualizados ({len(actualizados)}): {', '.join(actualizados) or '—'}")
     else:
         from app import app
         from models import Proyecto, db
