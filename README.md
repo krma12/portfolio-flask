@@ -106,14 +106,15 @@ GitHub Actions runs the tests and a dependency audit on every push.
 | **XSS** | Jinja2 auto-escaping on the server, and HTML escaping in the terminal and JSON view on the client. |
 | **Content-Security-Policy** | Scripts only from the site itself (no inline scripts or event handlers), fonts only from Google Fonts, the form only posts to Formspree, `object-src 'none'`, `base-uri 'self'`. |
 | **Transport** | HTTPS enforced + `Strict-Transport-Security`. |
+| **CORS** | Only my logbook (`krma12.github.io`) can read `GET /proyectos` from a browser, to show my projects live. No other site can, and writes never get CORS headers. |
 | **Clickjacking** | `frame-ancestors 'none'` + `X-Frame-Options: DENY`. |
 | **Other headers** | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (no camera, mic or location). |
 | **Production config** | Debug mode off by default. Secrets only in environment variables and GitHub Secrets, never in the repo. Keys are rotated if exposed. |
-| **Spam** | Honeypot field in the contact form. |
+| **Spam** | Honeypot field in the contact form; no email address is published on the page. |
 | **Dependencies** | `pip-audit` in CI on every push + weekly Dependabot updates. |
 | **Logging** | Security events (invalid keys, blocked IPs, created/edited/deleted projects) are written to the server log with IP and route — never the key itself. |
 | **Backups** | A daily GitHub Actions job downloads every project to JSON and keeps it for 90 days; `respaldo.py restaurar` rebuilds the portfolio from a backup. |
-| **Regression tests** | 18 security tests check headers, link validation, escaping, rate limiting and logging, so a protection can't silently disappear. |
+| **Regression tests** | 21 security tests check headers, CORS, link validation, escaping, rate limiting and logging, so a protection can't silently disappear. |
 
 ### Security model: CIA triad & ISC2 CC domains
 

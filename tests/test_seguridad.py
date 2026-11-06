@@ -143,3 +143,19 @@ def test_registra_bloqueo_y_cambios(cliente, caplog):
             cliente.delete('/proyectos/1', headers={'X-API-Key': 'mal'})
     assert 'evento=proyecto_creado' in caplog.text
     assert 'evento=ip_bloqueada' in caplog.text
+
+
+# ---------- CORS: la bitácora puede leer la lista de proyectos ----------
+def test_cors_permite_leer_proyectos_a_la_bitacora(cliente):
+    r = cliente.get('/proyectos', headers={'Origin': 'https://krma12.github.io'})
+    assert r.headers.get('Access-Control-Allow-Origin') == 'https://krma12.github.io'
+
+
+def test_cors_no_permite_otros_sitios(cliente):
+    r = cliente.get('/proyectos', headers={'Origin': 'https://sitio-malo.example'})
+    assert 'Access-Control-Allow-Origin' not in r.headers
+
+
+def test_cors_solo_para_leer(cliente):
+    r = cliente.post('/proyectos', json={'titulo': 'x'}, headers={'Origin': 'https://krma12.github.io'})
+    assert 'Access-Control-Allow-Origin' not in r.headers

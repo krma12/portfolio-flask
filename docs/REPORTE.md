@@ -38,7 +38,7 @@ Tener un portfolio **publicado, bilingüe, automatizado y seguro**, que cumpla c
 |---|---|
 | **Base** | API REST con Flask-RESTful y SQLAlchemy sobre SQLite: listar, crear, editar y borrar proyectos. La página se genera con plantillas Jinja2 a partir de la base de datos. |
 | **Proteger la escritura** | Cualquier cambio en la API ahora pide una clave en el encabezado `X-API-Key`. La clave vive en una variable de entorno y nunca en el código. Si no hay clave configurada, la API queda de solo lectura. |
-| **Pruebas** | Pruebas automáticas con pytest para la API, la página, la sincronización y la seguridad. Hoy son 50 pruebas. |
+| **Pruebas** | Pruebas automáticas con pytest para la API, la página, la sincronización y la seguridad. Hoy son 57 pruebas. |
 | **Interfaz** | Diseño responsive con modo claro/oscuro, cambio de idioma inglés/español, filtros por tecnología, una vista JSON que muestra la API en vivo y una terminal interactiva con comandos como `projects --tag security`. Formulario de contacto conectado a Formspree. |
 | **Publicación** | El sitio se publicó en PythonAnywhere con HTTPS forzado y el modo debug apagado en producción. |
 | **Automatización** | GitHub Actions corre las pruebas en cada cambio y, cada mañana, sincroniza el portfolio con mis repositorios: agrega los nuevos y completa la descripción y los topics de los que ya existen, sin pisar lo que escribí a mano. |
@@ -94,7 +94,8 @@ Tener un portfolio **publicado, bilingüe, automatizado y seguro**, que cumpla c
 | Errores que muestran información interna | Modo debug apagado en producción | En internet, el modo debug permitiría ejecutar código en el servidor. |
 | Spam en el formulario | Campo trampa (*honeypot*) que solo llenan los bots | Formspree descarta esos mensajes. |
 | Librerías con vulnerabilidades | `pip-audit` en cada cambio + **Dependabot** semanal | Me entero si Flask u otra dependencia tiene un fallo conocido y GitHub propone la actualización. |
-| Que una protección se pierda sin darme cuenta | 18 pruebas de seguridad automáticas | Si un cambio quita un encabezado o vuelve a aceptar links peligrosos, las pruebas fallan. |
+| Que otro sitio lea la API desde el navegador de un visitante | CORS solo para mi bitácora, y solo para leer `GET /proyectos` | La bitácora muestra mis proyectos en vivo; crear, editar o borrar sigue pidiendo la clave. |
+| Que una protección se pierda sin darme cuenta | 21 pruebas de seguridad automáticas | Si un cambio quita un encabezado o vuelve a aceptar links peligrosos, las pruebas fallan. |
 | No saber qué pasó ante un ataque | **Registro de eventos de seguridad:** claves incorrectas, IPs bloqueadas y proyectos creados, editados o borrados quedan en el log del servidor, con IP y ruta, **nunca la clave** | Permite detectar y entender un incidente. |
 | Perder los datos | **Respaldo diario** de todos los proyectos en JSON, guardado 90 días en GitHub Actions, y un script para restaurarlos | Si la base se borra o se daña, el portfolio se reconstruye en minutos. |
 | Claves expuestas | Secretos solo en variables de entorno y GitHub Secrets; **rotación** de la clave cuando quedó visible | Una clave vista por alguien más se cambia de inmediato. |

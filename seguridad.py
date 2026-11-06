@@ -50,9 +50,20 @@ ENCABEZADOS = {
 }
 
 
+# Sitios que pueden LEER la lista de proyectos desde el navegador (CORS).
+# La bitácora (GitHub Pages) muestra mis proyectos en vivo desde aquí.
+# Solo lectura: GET /proyectos. Crear, editar o borrar sigue necesitando la clave
+# y ningún otro sitio puede leer la API desde el navegador de un visitante.
+ORIGENES_PERMITIDOS = {"https://krma12.github.io"}
+
+
 def agregar_encabezados(respuesta):
     for nombre, valor in ENCABEZADOS.items():
         respuesta.headers.setdefault(nombre, valor)
+    origen = request.headers.get("Origin")
+    if request.method == "GET" and request.path == "/proyectos" and origen in ORIGENES_PERMITIDOS:
+        respuesta.headers["Access-Control-Allow-Origin"] = origen
+        respuesta.headers["Vary"] = "Origin"
     return respuesta
 
 
