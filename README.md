@@ -2,7 +2,7 @@
 
 **Live:** [hugoportfolio.pythonanywhere.com](https://hugoportfolio.pythonanywhere.com) · **Project report (Spanish):** [docs/REPORTE.md](docs/REPORTE.md)
 
-[![Mozilla HTTP Observatory: A+](https://img.shields.io/badge/Mozilla%20Observatory-A%2B%20(110%2F100)-brightgreen)](https://developer.mozilla.org/en-US/observatory/analyze?host=hugoportfolio.pythonanywhere.com)
+[![Mozilla HTTP Observatory: A+](https://img.shields.io/badge/Mozilla_Observatory-A%2B_%28110%2F100%29-brightgreen)](https://developer.mozilla.org/en-US/observatory/analyze?host=hugoportfolio.pythonanywhere.com)
 
 Personal portfolio built with Flask, SQLAlchemy and a REST API. The project list isn't hardcoded: it lives in a database, is managed through a key-protected CRUD API, and syncs itself every day with my GitHub repositories.
 
@@ -13,7 +13,7 @@ Personal portfolio built with Flask, SQLAlchemy and a REST API. The project list
 - Projects render dynamically from the database, with technology filters, a live JSON view and an interactive terminal (`help`, `projects --tag security`, `theme light`…).
 - Daily GitHub sync: new repositories are added, and the description, website and topics of existing ones are filled in without overwriting hand-written content.
 - Contact form (Formspree) with an anti-spam honeypot.
-- Hardened security (see [Security](#security)) and 45 automated tests.
+- Hardened security (see [Security](#security)), security event logging, daily backups and 50 automated tests.
 
 ## Tech stack
 
@@ -34,11 +34,12 @@ portfolio-flask/
 ├── seguridad.py        # Security headers, rate limiting, validators
 ├── etiquetas.py        # Clean technology tag names (AI, API, LLM…)
 ├── sync_github.py      # Syncs the portfolio with my GitHub repositories
+├── respaldo.py         # Daily backup of all projects + restore script
 ├── seed.py             # Populates the database with the initial projects
 ├── templates/
 │   └── landing_page.html
 ├── static/             # main.js, portfolio.js, images, favicon
-├── tests/              # API, sync and security tests
+├── tests/              # API, sync, backup and security tests
 ├── docs/REPORTE.md     # Project report: purpose, history, concepts
 └── .github/            # CI workflow + Dependabot
 ```
@@ -101,7 +102,29 @@ GitHub Actions runs the tests and a dependency audit on every push.
 | **Production config** | Debug mode off by default. Secrets only in environment variables and GitHub Secrets, never in the repo. Keys are rotated if exposed. |
 | **Spam** | Honeypot field in the contact form. |
 | **Dependencies** | `pip-audit` in CI on every push + weekly Dependabot updates. |
-| **Regression tests** | 16 security tests check headers, link validation, escaping and rate limiting, so a protection can't silently disappear. |
+| **Logging** | Security events (invalid keys, blocked IPs, created/edited/deleted projects) are written to the server log with IP and route — never the key itself. |
+| **Backups** | A daily GitHub Actions job downloads every project to JSON and keeps it for 90 days; `respaldo.py restaurar` rebuilds the portfolio from a backup. |
+| **Regression tests** | 18 security tests check headers, link validation, escaping, rate limiting and logging, so a protection can't silently disappear. |
+
+### Security model: CIA triad & ISC2 CC domains
+
+How each control in this project maps to the CIA triad and to the five domains of the ISC2 Certified in Cybersecurity (CC) exam:
+
+| CIA | Controls in this project |
+|---|---|
+| **Confidentiality** | Secrets only in environment variables / GitHub Secrets · HTTPS + HSTS · `Referrer-Policy` · the key is never logged |
+| **Integrity** | Only the key holder can write · input validation (https-only links, length limits) · output escaping + CSP against XSS · tests that fail if a control disappears |
+| **Availability** | Read access is always public · rate limiting stops brute force without blocking readers · daily backups with a restore script · dependency updates |
+
+| ISC2 CC domain | How it's applied |
+|---|---|
+| **1. Security Principles** | Least privilege (public read, keyed write) · fail closed (no key configured = read-only) · defense in depth (validation + escaping + CSP) |
+| **2. Business Continuity, DR & Incident Response** | Daily backups kept 90 days and a tested restore script (recovery) · an exposed key was rotated immediately (incident response) |
+| **3. Access Control Concepts** | API-key authentication · constant-time comparison · lockout after repeated failures (`429`) |
+| **4. Network Security** | HTTPS enforced · HSTS · CSP · clickjacking protection (`frame-ancestors`, `X-Frame-Options`) |
+| **5. Security Operations** | Security event logging · CI tests on every push · `pip-audit` + Dependabot · secrets management · debug mode off in production |
+
+**Known limits:** the database is SQLite on a single server, rate limiting is kept in memory (it resets when the app reloads), and logs live in the hosting provider's server log rather than a central SIEM.
 
 Found a security issue? Please contact me privately through [LinkedIn](https://www.linkedin.com/in/hugo-maldonado-a20445201) instead of opening a public issue.
 

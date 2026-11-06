@@ -124,3 +124,22 @@ def test_el_bloqueo_expira():
     assert esta_bloqueado('1.2.3.4', ahora=1001)
     assert not esta_bloqueado('1.2.3.4', ahora=1000 + BLOQUEO + 1)
     limpiar_intentos()
+
+
+# ---------- Registro de eventos ----------
+
+def test_registra_clave_invalida_sin_guardar_la_clave(cliente, caplog):
+    with caplog.at_level('INFO', logger='portfolio.seguridad'):
+        cliente.post('/proyectos', json={'titulo': 'X'}, headers={'X-API-Key': 'clave-secreta-adivinada'})
+    texto = caplog.text
+    assert 'evento=clave_invalida' in texto
+    assert 'clave-secreta-adivinada' not in texto      # nunca se escribe la clave en el log
+
+
+def test_registra_bloqueo_y_cambios(cliente, caplog):
+    with caplog.at_level('INFO', logger='portfolio.seguridad'):
+        cliente.post('/proyectos', json={'titulo': 'Nuevo'}, headers=CLAVE)
+        for _ in range(MAX_FALLOS):
+            cliente.delete('/proyectos/1', headers={'X-API-Key': 'mal'})
+    assert 'evento=proyecto_creado' in caplog.text
+    assert 'evento=ip_bloqueada' in caplog.text

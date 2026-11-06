@@ -38,12 +38,12 @@ Tener un portfolio **publicado, bilingüe, automatizado y seguro**, que cumpla c
 |---|---|
 | **Base** | API REST con Flask-RESTful y SQLAlchemy sobre SQLite: listar, crear, editar y borrar proyectos. La página se genera con plantillas Jinja2 a partir de la base de datos. |
 | **Proteger la escritura** | Cualquier cambio en la API ahora pide una clave en el encabezado `X-API-Key`. La clave vive en una variable de entorno y nunca en el código. Si no hay clave configurada, la API queda de solo lectura. |
-| **Pruebas** | Pruebas automáticas con pytest para la API, la página, la sincronización y la seguridad. Hoy son 45 pruebas. |
+| **Pruebas** | Pruebas automáticas con pytest para la API, la página, la sincronización y la seguridad. Hoy son 50 pruebas. |
 | **Interfaz** | Diseño responsive con modo claro/oscuro, cambio de idioma inglés/español, filtros por tecnología, una vista JSON que muestra la API en vivo y una terminal interactiva con comandos como `projects --tag security`. Formulario de contacto conectado a Formspree. |
 | **Publicación** | El sitio se publicó en PythonAnywhere con HTTPS forzado y el modo debug apagado en producción. |
 | **Automatización** | GitHub Actions corre las pruebas en cada cambio y, cada mañana, sincroniza el portfolio con mis repositorios: agrega los nuevos y completa la descripción y los topics de los que ya existen, sin pisar lo que escribí a mano. |
 | **Pulido** | Las etiquetas de tecnologías se muestran limpias (siglas correctas, máximo 6 por tarjeta con un botón para ver el resto). Los títulos recuperan los acentos que GitHub quita. La página ya no se oscurece a la fuerza por extensiones del navegador. |
-| **Seguridad** | Validación de datos, encabezados de seguridad, límite de intentos, auditoría de dependencias y pruebas de seguridad. Los detalles están en la sección 6. |
+| **Seguridad** | Validación de datos, encabezados de seguridad, límite de intentos, registro de eventos, respaldos diarios, auditoría de dependencias y pruebas de seguridad. Los detalles están en la sección 6. |
 
 ## 5. Arquitectura y conceptos aplicados
 
@@ -89,8 +89,28 @@ Visitante ◄── HTTPS ◄── Flask + Jinja2 (página) ◄─────�
 | Errores que muestran información interna | Modo debug apagado en producción | En internet, el modo debug permitiría ejecutar código en el servidor. |
 | Spam en el formulario | Campo trampa (*honeypot*) que solo llenan los bots | Formspree descarta esos mensajes. |
 | Librerías con vulnerabilidades | `pip-audit` en cada cambio + **Dependabot** semanal | Me entero si Flask u otra dependencia tiene un fallo conocido y GitHub propone la actualización. |
-| Que una protección se pierda sin darme cuenta | 16 pruebas de seguridad automáticas | Si un cambio quita un encabezado o vuelve a aceptar links peligrosos, las pruebas fallan. |
+| Que una protección se pierda sin darme cuenta | 18 pruebas de seguridad automáticas | Si un cambio quita un encabezado o vuelve a aceptar links peligrosos, las pruebas fallan. |
+| No saber qué pasó ante un ataque | **Registro de eventos de seguridad:** claves incorrectas, IPs bloqueadas y proyectos creados, editados o borrados quedan en el log del servidor, con IP y ruta, **nunca la clave** | Permite detectar y entender un incidente. |
+| Perder los datos | **Respaldo diario** de todos los proyectos en JSON, guardado 90 días en GitHub Actions, y un script para restaurarlos | Si la base se borra o se daña, el portfolio se reconstruye en minutos. |
 | Claves expuestas | Secretos solo en variables de entorno y GitHub Secrets; **rotación** de la clave cuando quedó visible | Una clave vista por alguien más se cambia de inmediato. |
+
+### Modelo de seguridad: tríada CIA y dominios de la ISC2 CC
+
+| CIA | Controles en este proyecto |
+|---|---|
+| **Confidencialidad** | Secretos solo en variables de entorno y GitHub Secrets · HTTPS + HSTS · `Referrer-Policy` · la clave nunca se escribe en el log |
+| **Integridad** | Solo quien tiene la clave puede escribir · validación de datos (solo links https, largos máximos) · escapado + CSP contra XSS · pruebas que fallan si un control desaparece |
+| **Disponibilidad** | La lectura siempre es pública · el límite de intentos frena la fuerza bruta sin bloquear a los visitantes · respaldos diarios con script de restauración · dependencias actualizadas |
+
+| Dominio ISC2 CC | Cómo se aplica |
+|---|---|
+| **1. Principios de seguridad** | Mínimo privilegio (leer es público, escribir pide clave) · *fail closed* · defensa en profundidad (validación + escapado + CSP) |
+| **2. Continuidad, recuperación y respuesta a incidentes** | Respaldos diarios guardados 90 días y script de restauración probado · rotación inmediata de una clave expuesta |
+| **3. Control de acceso** | Autenticación con API key · comparación en tiempo constante · bloqueo tras intentos fallidos (`429`) |
+| **4. Seguridad de red** | HTTPS forzado · HSTS · CSP · protección contra *clickjacking* |
+| **5. Operaciones de seguridad** | Registro de eventos · pruebas en cada push · `pip-audit` + Dependabot · manejo de secretos · modo debug apagado |
+
+**Límites conocidos:** la base de datos es SQLite en un solo servidor; el límite de intentos vive en memoria (se reinicia al recargar la app), y los registros quedan en el log del proveedor y no en un SIEM central.
 
 ## 7. Problemas encontrados y cómo se resolvieron
 
@@ -107,6 +127,6 @@ Visitante ◄── HTTPS ◄── Flask + Jinja2 (página) ◄─────�
 
 - Escribir la descripción en español de los proyectos nuevos.
 - Agregar una búsqueda por texto en los proyectos.
-- Registrar los intentos bloqueados para revisarlos (*logging*).
+- Enviar los registros de seguridad a una herramienta central (SIEM) para generar alertas.
 - Evaluar una base de datos administrada si el sitio crece.
 - Seguir sumando proyectos, en especial de ciberseguridad e IA.

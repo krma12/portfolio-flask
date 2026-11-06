@@ -5,7 +5,9 @@ from flask import current_app, make_response, render_template, request
 from flask_restful import Resource, inputs, reqparse
 
 from models import Proyecto, db
-from seguridad import esta_bloqueado, ip_cliente, link_https, registrar_fallo, texto
+import logging
+
+from seguridad import esta_bloqueado, ip_cliente, link_https, registrar_evento, registrar_fallo, texto
 
 
 # ---------------------------------------------------------------------------
@@ -24,12 +26,14 @@ def requiere_clave(metodo):
         # Si el servidor no tiene clave configurada, nadie puede escribir.
         # (Fallar "cerrado" es más seguro que dejar la API abierta por olvido.)
         if not clave_correcta:
+            registrar_evento('escritura_sin_clave_configurada', logging.WARNING, ip=ip_cliente(), ruta=request.path)
             return {'mensaje': 'La API está en modo solo lectura'}, 403
 
         # Si esta IP falló la clave demasiadas veces, la frenamos un rato
         ip = ip_cliente()
         espera = esta_bloqueado(ip)
         if espera:
+            registrar_evento('peticion_bloqueada', logging.WARNING, ip=ip, metodo=request.method, ruta=request.path)
             return {'mensaje': 'Demasiados intentos. Intenta más tarde.'}, 429, {'Retry-After': str(espera)}
 
         clave_recibida = request.headers.get('X-API-Key', '')
@@ -37,6 +41,7 @@ def requiere_clave(metodo):
         # compare_digest compara en tiempo constante: no revela, por lo que
         # tarda en responder, cuántos caracteres de la clave acertaste.
         if not hmac.compare_digest(clave_recibida.encode(), clave_correcta.encode()):
+            registrar_evento('clave_invalida', logging.WARNING, ip=ip, metodo=request.method, ruta=request.path)
             registrar_fallo(ip)
             return {'mensaje': 'Clave inválida o faltante'}, 401
 
@@ -98,6 +103,7 @@ class ListaProyectos(Resource):
         db.session.add(nuevo)   # lo prepara para guardar
         db.session.commit()     # lo guarda de verdad en proyectos.db
 
+        registrar_evento('proyecto_creado', id=nuevo.id, ip=ip_cliente())
         return nuevo.to_dict(), 201   # 201 = "Created"
 
 
@@ -123,6 +129,7 @@ class ProyectoIndividual(Resource):
             setattr(proyecto, campo, datos[campo])
 
         db.session.commit()
+        registrar_evento('proyecto_editado', id=id, ip=ip_cliente())
         return proyecto.to_dict()
 
     @requiere_clave
@@ -133,4 +140,5 @@ class ProyectoIndividual(Resource):
 
         db.session.delete(proyecto)
         db.session.commit()
+        registrar_evento('proyecto_eliminado', logging.WARNING, id=id, ip=ip_cliente())
         return {'mensaje': 'Proyecto eliminado'}, 200

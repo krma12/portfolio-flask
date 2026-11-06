@@ -4,6 +4,8 @@
 #                vulnerabilidades en las dependencias, en cada push y pull request
 #   2. sync   -> cada mañana agrega al portfolio publicado los repos
 #                nuevos de GitHub, usando la API del propio portfolio
+#   3. backup -> cada mañana descarga todos los proyectos en un JSON y lo
+#                guarda 90 días (Actions → la ejecución → Artifacts)
 #
 # Configuración (una sola vez, en GitHub):
 #   Settings → Secrets and variables → Actions
@@ -55,3 +57,21 @@ jobs:
           PORTFOLIO_API_KEY: ${{ secrets.PORTFOLIO_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # evita el límite de consultas de GitHub
         run: python sync_github.py --remoto "${{ vars.PORTFOLIO_URL }}"
+
+  backup:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Solo lee la API pública: no necesita la clave
+      - name: Descargar respaldo de los proyectos
+        run: python respaldo.py descargar "${{ vars.PORTFOLIO_URL }}"
+      - name: Guardar respaldo (90 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-proyectos
+          path: respaldos/*.json
+          retention-days: 90

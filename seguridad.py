@@ -4,9 +4,11 @@ Seguridad del portfolio, todo en un solo lugar:
 1. Encabezados de seguridad en cada respuesta (CSP, HSTS, etc.)
 2. Límite de intentos: bloquea por un rato a quien falla la clave muchas veces
 3. Validadores para los datos que llegan a la API (links https y largos máximos)
+4. Registro de eventos de seguridad (quién falló la clave, bloqueos, cambios)
 
 Se conecta a la app con  instalar_seguridad(app)  desde app.py.
 """
+import logging
 import time
 from collections import defaultdict, deque
 from urllib.parse import urlparse
@@ -88,6 +90,7 @@ def registrar_fallo(ip, ahora=None):
     if len(fallos) >= MAX_FALLOS:
         _bloqueados[ip] = ahora + BLOQUEO
         fallos.clear()
+        registrar_evento("ip_bloqueada", logging.WARNING, ip=ip, minutos=BLOQUEO // 60)
 
 
 def limpiar_intentos():
@@ -121,6 +124,27 @@ def texto(maximo):
         return valor
     validar.__name__ = f"texto_max_{maximo}"
     return validar
+
+
+# ---------------------------------------------------------------------------
+# 4. Registro de eventos de seguridad
+# ---------------------------------------------------------------------------
+# Se escribe en el log del servidor (en PythonAnywhere: pestaña Web → "Server log").
+# Nunca se registra la clave ni el contenido de los datos: solo qué pasó, desde
+# qué IP, sobre qué ruta y con qué resultado.
+registro = logging.getLogger("portfolio.seguridad")
+if not registro.handlers:
+    _salida = logging.StreamHandler()
+    _salida.setFormatter(logging.Formatter("%(asctime)s [SEGURIDAD] %(levelname)s %(message)s"))
+    registro.addHandler(_salida)
+registro.setLevel(logging.INFO)
+registro.propagate = True
+
+
+def registrar_evento(evento, nivel=logging.INFO, **datos):
+    """registrar_evento('clave_invalida', ip='1.2.3.4', ruta='/proyectos') -> una línea en el log."""
+    detalle = " ".join(f"{k}={v}" for k, v in datos.items())
+    registro.log(nivel, f"evento={evento} {detalle}".strip())
 
 
 def instalar_seguridad(app):
