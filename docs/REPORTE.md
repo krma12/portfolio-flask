@@ -72,6 +72,8 @@ Visitante ◄── HTTPS ◄── Flask + Jinja2 (página) ◄─────�
 
 ## 6. Seguridad: qué se protegió y por qué
 
+**Resultado:** calificación **A+ (110/100, 12 de 12 pruebas)** en [Mozilla HTTP Observatory](https://developer.mozilla.org/en-US/observatory/analyze?host=hugoportfolio.pythonanywhere.com), la herramienta pública de Mozilla que evalúa la seguridad de un sitio web (noviembre 2026).
+
 | Amenaza | Protección | Por qué importa |
 |---|---|---|
 | Alguien edita o borra mis proyectos | La API pide una clave (`X-API-Key`), que se compara con `hmac.compare_digest` | Solo yo puedo escribir. La comparación en tiempo constante evita adivinar la clave midiendo cuánto tarda la respuesta. |

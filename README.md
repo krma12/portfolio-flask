@@ -2,6 +2,8 @@
 
 **Live:** [hugoportfolio.pythonanywhere.com](https://hugoportfolio.pythonanywhere.com) · **Project report (Spanish):** [docs/REPORTE.md](docs/REPORTE.md)
 
+[![Mozilla HTTP Observatory: A+](https://img.shields.io/badge/Mozilla%20Observatory-A%2B%20(110%2F100)-brightgreen)](https://developer.mozilla.org/en-US/observatory/analyze?host=hugoportfolio.pythonanywhere.com)
+
 Personal portfolio built with Flask, SQLAlchemy and a REST API. The project list isn't hardcoded: it lives in a database, is managed through a key-protected CRUD API, and syncs itself every day with my GitHub repositories.
 
 ## Features
@@ -83,6 +85,8 @@ GitHub Actions runs the tests and a dependency audit on every push.
 `PUT` replaces the whole project, so send every field, not just the one that changes.
 
 ## Security
+
+**Result:** A+ on [Mozilla HTTP Observatory](https://developer.mozilla.org/en-US/observatory/analyze?host=hugoportfolio.pythonanywhere.com) — 110/100, 12/12 tests passed (November 2026).
 
 | Area | What's in place |
 |---|---|
