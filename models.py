@@ -4,6 +4,8 @@
 
 from flask_sqlalchemy import SQLAlchemy
 
+from etiquetas import etiqueta_bonita
+
 db = SQLAlchemy()
 
 
@@ -36,7 +38,14 @@ class Proyecto(db.Model):
         """Convierte "Python, Flask" en ["Python", "Flask"] para mostrarlas como etiquetas."""
         if not self.tecnologias:
             return []
-        return [t.strip() for t in self.tecnologias.split(',') if t.strip()]
+        # etiqueta_bonita arregla siglas y nombres ("Ai Agents" -> "AI Agents")
+        vistas, lista = set(), []
+        for t in self.tecnologias.split(','):
+            bonita = etiqueta_bonita(t)
+            if bonita and bonita.lower() not in vistas:
+                vistas.add(bonita.lower())
+                lista.append(bonita)
+        return lista
 
     def to_dict(self):
         """Lo convierte a diccionario para poder devolverlo como JSON desde la API."""

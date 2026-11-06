@@ -487,3 +487,13 @@
     setTimeout(() => escribirYEjecutar("whoami"), sinAnimacion ? 0 : 600);
   }
 })();
+
+// Etiquetas: el botón "+N" muestra u oculta las tecnologías extra de una tarjeta
+document.addEventListener("click", (e) => {
+  const boton = e.target.closest(".tag-more");
+  if (!boton) return;
+  const abierto = boton.getAttribute("aria-expanded") === "true";
+  boton.closest(".tech-tags").querySelectorAll(".tag-extra").forEach((li) => { li.hidden = abierto; });
+  boton.setAttribute("aria-expanded", String(!abierto));
+  boton.textContent = abierto ? boton.dataset.mas : "−";
+});

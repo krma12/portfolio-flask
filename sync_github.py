@@ -36,9 +36,12 @@ La automatización diaria vive en .github/workflows/portfolio.yml (GitHub Action
 
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
+
+from etiquetas import etiqueta_bonita
 
 USUARIO = os.environ.get("GITHUB_USER", "krma12")
 
@@ -76,7 +79,9 @@ def obtener_repos():
 
 
 def titulo_bonito(nombre_repo):
-    """'Space_Invaders' -> 'Space Invaders' ; 'mi-bitacora' -> 'Mi Bitacora'"""
+    """'Space_Invaders' -> 'Space Invaders' ; 'mi-bitacora' -> 'Mi Bitacora'
+    GitHub no acepta acentos en el nombre y pone un guion: 'automatizaci-n' -> 'Automatización'."""
+    nombre_repo = re.sub(r"ci-n(?=$|[_\-])", "ción", nombre_repo)
     palabras = nombre_repo.replace("_", " ").replace("-", " ").split()
     return " ".join(p if p.isupper() or any(c.isupper() for c in p[1:]) else p.capitalize() for p in palabras)
 
@@ -90,7 +95,7 @@ def tecnologias_de(repo):
     for topic in repo.get("topics") or []:
         if topic == TOPIC_OCULTAR:
             continue
-        nombre = NOMBRES_TOPICS.get(topic, topic.replace("-", " ").title())
+        nombre = NOMBRES_TOPICS.get(topic) or etiqueta_bonita(topic)
         if nombre not in lista:
             lista.append(nombre)
     return ", ".join(lista)

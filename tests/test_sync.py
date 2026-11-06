@@ -160,3 +160,26 @@ def test_sincronizar_remoto_avisa_si_la_clave_falla():
 
     with pytest.raises(RuntimeError):
         sincronizar_remoto([repo("Nuevo")], "https://ejemplo.com", "mala", pedir=pedir_falso)
+
+
+# ---------- Etiquetas y títulos ----------
+
+def test_etiquetas_bonitas():
+    from etiquetas import etiqueta_bonita
+    assert etiqueta_bonita("ai-agents") == "AI Agents"
+    assert etiqueta_bonita("Ai Agents") == "AI Agents"          # lo que ya estaba guardado
+    assert etiqueta_bonita("Gemini Api Key") == "Gemini API Key"
+    assert etiqueta_bonita("Llm") == "LLM"
+    assert etiqueta_bonita("Pytest") == "pytest"
+    assert etiqueta_bonita("Smbghost") == "SMBGhost"
+    assert etiqueta_bonita("SQLite") == "SQLite"
+
+
+def test_titulo_recupera_acento_de_github():
+    assert titulo_bonito("automatizaci-n_simple") == "Automatización Simple"
+    assert titulo_bonito("mi-bitacora") == "Mi Bitacora"
+
+
+def test_lista_tecnologias_sin_repetidos(contexto):
+    p = Proyecto(titulo="X", tecnologias="Python, Ai Agents, ai-agents, Llm")
+    assert p.lista_tecnologias == ["Python", "AI Agents", "LLM"]

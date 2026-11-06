@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- La página ya tiene su propio modo oscuro: le pedimos al navegador y a
+     extensiones como Dark Reader que no la oscurezcan por su cuenta -->
+<meta name="color-scheme" content="light dark">
+<meta name="darkreader-lock">
 <title>Hugo Maldonado — Portfolio</title>
 <meta name="description" content="Portfolio of Hugo Maldonado — AI engineering student building projects in Python, data and computer vision.">
 <!-- Vista previa al compartir el link (WhatsApp, LinkedIn…). _external=True genera la URL completa -->
@@ -34,9 +38,11 @@
     --shadow: 0 10px 30px rgba(31,35,40,0.06);
     --shadow-hover: 0 16px 40px rgba(31,35,40,0.10);
     --max-width: 1100px;
+    color-scheme: light;
   }
 
   [data-theme="dark"]{
+    color-scheme: dark;
     --bg: #14161a;
     --surface: #1c1f24;
     --text: #f4f4f2;
@@ -502,6 +508,15 @@
     color: var(--text-muted);
   }
 
+  .tech-tags li.tag-more-item{ padding: 0; border: 0; background: none; }
+  .tag-more{
+    font: inherit; font-size: 0.72rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    background: transparent; color: var(--text-muted);
+    border: 1px dashed var(--border);
+  }
+  .tag-more:hover, .tag-more:focus-visible{ color: var(--text); border-style: solid; }
+
   .project-card{ display: flex; flex-direction: column; }
   .project-body{ display: flex; flex-direction: column; flex: 1; }
   .project-links{ margin-top: auto; }
@@ -965,8 +980,10 @@
           <p class="project-metric" data-lang="es">Resultado clave: {{ proyecto.resultado_es or proyecto.resultado }}</p>
           {% endif %}
           {% if proyecto.lista_tecnologias %}
+          {# Muestra máximo 6 etiquetas; el resto se abre con el botón "+N" #}
           <ul class="tech-tags" aria-label="Technologies">
-            {% for tecnologia in proyecto.lista_tecnologias %}<li>{{ tecnologia }}</li>{% endfor %}
+            {% for tecnologia in proyecto.lista_tecnologias %}<li{% if loop.index > 6 %} class="tag-extra" hidden{% endif %}>{{ tecnologia }}</li>{% endfor %}
+            {% if proyecto.lista_tecnologias|length > 6 %}<li class="tag-more-item"><button type="button" class="tag-more" aria-expanded="false" data-mas="+{{ proyecto.lista_tecnologias|length - 6 }}">+{{ proyecto.lista_tecnologias|length - 6 }}</button></li>{% endif %}
           </ul>
           {% endif %}
           <div class="project-links">
