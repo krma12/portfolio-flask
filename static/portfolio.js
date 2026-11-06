@@ -189,7 +189,9 @@
   }
 
   function escapar(texto) {
-    return String(texto).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Convierte < > & " ' en texto inofensivo antes de meterlo al HTML (evita XSS)
+    return String(texto).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
   // Colorea el JSON: claves, textos, números y null
@@ -374,7 +376,7 @@
         if (!lista.length) { linea(m().sinProyectos, "warn"); return; }
         lista.forEach((p) => {
           const tecs = (p.tecnologias || []).join(", ");
-          linea(`${p.emoji || "•"} <span class="acc">${escapar(p.titulo)}</span> <span class="dim">— ${escapar(tecs)}</span> <a href="${encodeURI(p.repo_url || "#")}" target="_blank" rel="noopener">${m().verRepo}</a>`);
+          linea(`${escapar(p.emoji || "•")} <span class="acc">${escapar(p.titulo)}</span> <span class="dim">— ${escapar(tecs)}</span> <a href="${escapar(encodeURI(p.repo_url || "#"))}" target="_blank" rel="noopener">${m().verRepo}</a>`);
         });
         if (categoria) filtrar(categoria.id);
       } catch (e) {

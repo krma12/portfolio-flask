@@ -5,6 +5,7 @@ from flask import current_app, make_response, render_template, request
 from flask_restful import Resource, inputs, reqparse
 
 from models import Proyecto, db
+from seguridad import esta_bloqueado, ip_cliente, link_https, registrar_fallo, texto
 
 
 # ---------------------------------------------------------------------------
@@ -25,11 +26,18 @@ def requiere_clave(metodo):
         if not clave_correcta:
             return {'mensaje': 'La API está en modo solo lectura'}, 403
 
+        # Si esta IP falló la clave demasiadas veces, la frenamos un rato
+        ip = ip_cliente()
+        espera = esta_bloqueado(ip)
+        if espera:
+            return {'mensaje': 'Demasiados intentos. Intenta más tarde.'}, 429, {'Retry-After': str(espera)}
+
         clave_recibida = request.headers.get('X-API-Key', '')
 
         # compare_digest compara en tiempo constante: no revela, por lo que
         # tarda en responder, cuántos caracteres de la clave acertaste.
         if not hmac.compare_digest(clave_recibida.encode(), clave_correcta.encode()):
+            registrar_fallo(ip)
             return {'mensaje': 'Clave inválida o faltante'}, 401
 
         return metodo(*args, **kwargs)
@@ -58,15 +66,17 @@ class PaginaInicio(Resource):
 # reqparse valida los datos que llegan en el body de un POST/PUT.
 # Si falta 'titulo', responde solo con un error 400 automáticamente.
 parser = reqparse.RequestParser()
-parser.add_argument('titulo', type=str, required=True, help='El título es obligatorio')
-parser.add_argument('descripcion', type=str)
-parser.add_argument('resultado', type=str)
-parser.add_argument('descripcion_es', type=str)
-parser.add_argument('resultado_es', type=str)
-parser.add_argument('repo_url', type=str)
-parser.add_argument('demo_url', type=str)
-parser.add_argument('tecnologias', type=str)   # "Python, Flask, SQLite"
-parser.add_argument('emoji', type=str)
+# Cada campo tiene un largo máximo, y los links solo pueden ser https://
+# (así nadie puede guardar un link "javascript:..." que se ejecute al darle clic).
+parser.add_argument('titulo', type=texto(120), required=True, help='El título es obligatorio (máx. 120 caracteres)')
+parser.add_argument('descripcion', type=texto(500))
+parser.add_argument('resultado', type=texto(200))
+parser.add_argument('descripcion_es', type=texto(500))
+parser.add_argument('resultado_es', type=texto(200))
+parser.add_argument('repo_url', type=link_https)
+parser.add_argument('demo_url', type=link_https)
+parser.add_argument('tecnologias', type=texto(600))   # "Python, Flask, SQLite"
+parser.add_argument('emoji', type=texto(16))
 parser.add_argument('orden', type=int, default=0)
 parser.add_argument('es_fork', type=inputs.boolean, default=False)   # acepta true/false
 

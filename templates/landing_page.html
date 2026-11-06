@@ -876,7 +876,7 @@
 <section id="about">
   <div class="wrap about">
     <div class="about-avatar">
-      <img src="{{ url_for('static', filename='foto.jpg') }}" alt="Portrait of Hugo Maldonado" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <img src="{{ url_for('static', filename='foto.jpg') }}" alt="Portrait of Hugo Maldonado" id="avatarFoto">
       <span class="avatar-fallback">HM</span>
     </div>
     <div class="about-text">
@@ -1049,58 +1049,9 @@
   </div>
 </footer>
 
-<script>
-  // ---- Mobile menu toggle ----
-  const menuToggle = document.getElementById('menuToggle');
-  const navLinks = document.getElementById('navLinks');
-
-  menuToggle.addEventListener('click', () => {
-    const isOpen = navLinks.classList.toggle('open');
-    menuToggle.setAttribute('aria-expanded', isOpen);
-    menuToggle.textContent = isOpen ? '✕' : '☰';
-  });
-
-  navLinks.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('open');
-      menuToggle.setAttribute('aria-expanded', false);
-      menuToggle.textContent = '☰';
-    });
-  });
-
-  // ---- Light / dark theme toggle ----
-  const root = document.documentElement;
-  const themeToggle = document.getElementById('themeToggle');
-
-  function applyTheme(theme){
-    if(theme === 'dark'){
-      root.setAttribute('data-theme', 'dark');
-      themeToggle.textContent = '☀️';
-    } else {
-      root.removeAttribute('data-theme');
-      themeToggle.textContent = '🌙';
-    }
-  }
-
-  // localStorage puede fallar (modo privado, cookies bloqueadas): lo protegemos con try/catch
-  let storedTheme = null;
-  try { storedTheme = localStorage.getItem('theme'); } catch (e) {}
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
-
-  themeToggle.addEventListener('click', () => {
-    const isDark = root.getAttribute('data-theme') === 'dark';
-    const next = isDark ? 'light' : 'dark';
-    applyTheme(next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
-  });
-
-  // La terminal (portfolio.js) usa esta función para el comando "theme dark|light"
-  window.portfolioTheme = (tema) => {
-    applyTheme(tema);
-    try { localStorage.setItem('theme', tema); } catch (e) {}
-  };
-</script>
+<!-- Menú, tema claro/oscuro y foto (antes estaba aquí en línea; en un archivo aparte
+     la política de seguridad CSP puede prohibir cualquier script en línea) -->
+<script src="{{ url_for('static', filename='main.js') }}"></script>
 
 <!-- Terminal, filtros, vista JSON e idiomas -->
 <script src="{{ url_for('static', filename='portfolio.js') }}"></script>

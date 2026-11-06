@@ -1,181 +1,106 @@
 # Hugo Maldonado — Portfolio
 
-Personal portfolio website built with Flask, SQLAlchemy, and a REST API for managing projects. The project list on the site is not hardcoded: it's stored in a real database and served dynamically through a CRUD API **protected with an API key**.
+**Live:** [hugoportfolio.pythonanywhere.com](https://hugoportfolio.pythonanywhere.com) · **Project report (Spanish):** [docs/REPORTE.md](docs/REPORTE.md)
+
+Personal portfolio built with Flask, SQLAlchemy and a REST API. The project list isn't hardcoded: it lives in a database, is managed through a key-protected CRUD API, and syncs itself every day with my GitHub repositories.
 
 ## Features
 
-- **Interactive terminal** in the hero: visitors type commands (`whoami`, `projects --tag security`, `skills`, `contact`, `sudo hire-hugo`…). `projects` calls the site's own REST API live. Includes command history (↑/↓), Tab autocomplete and clickable suggestions.
-- **Filter projects by technology** (Python, Computer Vision, Web, Data, Security, Games), with counts.
-- **"View as JSON"** toggle: shows the real response of `GET /proyectos`, syntax-highlighted, with status code and response time.
-- **English / Spanish** toggle for the whole page and the terminal. Project descriptions are stored in both languages in the database.
-- **Automatic sync with GitHub:** new public repos appear on the site by themselves (see below).
-- Responsive landing page (hero, about, skills, projects, contact) with light/dark mode.
-- Projects render dynamically from the database, each with its technologies, key result, GitHub link and live demo (when there is one). Forked coursework repos are labeled "Fork · Coursework".
-- Stats calculated automatically from the data (number of projects and tools used).
-- REST API (`/proyectos`) with full CRUD. **Reading is public; creating, editing and deleting require an API key.**
-- Contact form powered by [Formspree](https://formspree.io), with a honeypot field against spam bots. Without a Formspree ID it falls back to email and LinkedIn buttons.
-- Link preview (Open Graph image) for WhatsApp, LinkedIn, etc., and a custom favicon.
-- Accessible navigation (skip link, reduced-motion support, ARIA labels).
-- Automated tests with pytest.
-
-## Security decisions
-
-| Decision | Why |
-|---|---|
-| API key in the `X-API-Key` header for POST/PUT/DELETE | Anyone can view the portfolio, but only I can change it. |
-| Key read from an environment variable | The secret never lives in the code or on GitHub. |
-| No key configured → API is read-only (403) | **Fail closed**: forgetting to configure it can't leave the API open. |
-| `hmac.compare_digest` to check the key | Constant-time comparison, so response timing doesn't leak the key. |
-| `debug` off unless `FLASK_DEBUG=1` | Flask's debug console allows running code on the server. |
+- Responsive landing page (hero, about, skills, projects, contact) with light/dark mode and English/Spanish.
+- REST API (`/proyectos`) with full CRUD. Writes require an API key.
+- Projects render dynamically from the database, with technology filters, a live JSON view and an interactive terminal (`help`, `projects --tag security`, `theme light`…).
+- Daily GitHub sync: new repositories are added, and the description, website and topics of existing ones are filled in without overwriting hand-written content.
+- Contact form (Formspree) with an anti-spam honeypot.
+- Hardened security (see [Security](#security)) and 45 automated tests.
 
 ## Tech stack
 
 - **Backend:** Python, Flask, Flask-RESTful
 - **Database:** SQLite, SQLAlchemy (ORM)
-- **Frontend:** HTML5, CSS3, Jinja2 and vanilla JavaScript (no framework)
-- **Testing:** pytest
+- **Frontend:** HTML5, CSS3, Jinja2, vanilla JavaScript
+- **Testing & CI:** pytest, GitHub Actions, pip-audit, Dependabot
+- **Hosting:** PythonAnywhere (HTTPS)
 
 ## Project structure
 
 ```
 portfolio-flask/
-├── app.py              # Flask app setup and configuration (environment variables)
+├── app.py              # Flask app setup and configuration (env variables)
 ├── routes.py           # Maps URLs to resource classes
-├── resources.py        # Route logic (GET/POST/PUT/DELETE) + API key check
+├── resources.py        # API logic (GET/POST/PUT/DELETE) + input validation
 ├── models.py           # Proyecto model (SQLAlchemy)
-├── seed.py             # Loads my real projects into the database
-├── sync_github.py      # Adds new GitHub repos automatically (local or --remoto)
-├── .github/workflows/
-│   └── portfolio.yml   # CI: tests on push + daily sync
-├── requirements.txt    # Pinned dependencies
-├── tests/
-│   ├── test_api.py     # Automated tests for the API and the page
-│   └── test_sync.py    # Tests for the GitHub sync
+├── seguridad.py        # Security headers, rate limiting, validators
+├── etiquetas.py        # Clean technology tag names (AI, API, LLM…)
+├── sync_github.py      # Syncs the portfolio with my GitHub repositories
+├── seed.py             # Populates the database with the initial projects
 ├── templates/
 │   └── landing_page.html
-└── static/
-    ├── portfolio.js    # Terminal, filters, JSON view and EN/ES toggle
-    ├── foto.jpg
-    ├── favicon.svg
-    └── og-image.jpg    # Image shown when the link is shared
+├── static/             # main.js, portfolio.js, images, favicon
+├── tests/              # API, sync and security tests
+├── docs/REPORTE.md     # Project report: purpose, history, concepts
+└── .github/            # CI workflow + Dependabot
 ```
 
 ## Installation
 
-1. Clone the repository and enter the folder:
-   ```
-   git clone https://github.com/krma12/portfolio-flask.git
-   cd portfolio-flask
-   ```
-
-2. Create and activate a virtual environment:
-   ```
-   # Windows (PowerShell)
-   py -m venv mi_entorno
-   .\mi_entorno\Scripts\Activate.ps1
-   ```
-
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Load the projects into the database:
-   ```
-   python seed.py
-   ```
+```bash
+git clone https://github.com/krma12/portfolio-flask.git
+cd portfolio-flask
+python -m venv mi_entorno
+.\mi_entorno\Scripts\Activate.ps1      # Windows (PowerShell)
+pip install -r requirements.txt
+python seed.py                         # optional: load the initial projects
+```
 
 ## Usage
 
-```
+```bash
+# The API key protects create/update/delete. Without it the API is read-only.
+$env:PORTFOLIO_API_KEY = "<your-secret-key>"   # PowerShell
 python app.py
 ```
 
-Open `http://127.0.0.1:8000/` in your browser.
-
-### Environment variables
-
-| Variable | What it does | Required |
-|---|---|---|
-| `PORTFOLIO_API_KEY` | Secret key for POST/PUT/DELETE. Without it, the API is read-only. | To edit projects |
-| `FORMSPREE_ID` | Formspree form ID (the part after `/f/`). Defaults to mine; set it to an empty string to show email/LinkedIn buttons instead. | No |
-| `FLASK_DEBUG` | Set to `1` to enable debug mode locally. Never in production. | No |
-| `DATABASE_URL` | Database location. Defaults to `sqlite:///proyectos.db`. | No |
-
-In PowerShell (only for the current window):
-```
-$env:PORTFOLIO_API_KEY = "a-long-random-secret"
-python app.py
-```
-
-## Automatic sync with GitHub
-
-```
-python sync_github.py
-```
-
-Reads my public repos from the GitHub API and **adds any repo that isn't on the site yet**. Existing projects are never overwritten; only empty fields get filled in, so hand-written texts (like the Spanish descriptions) are kept.
-
-Each new project is built from the repo's **About** settings on GitHub:
-
-| On GitHub | On the site |
-|---|---|
-| Description | Project description |
-| Website | "Live site" button |
-| Topics (`python`, `flask`, `opencv`…) | Technology tags (and filters) |
-| Language | Also added as a technology |
-| Fork | "Fork · Coursework" badge |
-
-To hide a repo, add the topic `hide-from-portfolio`. Archived repos are skipped.
-
-### Running it automatically (GitHub Actions)
-
-`.github/workflows/portfolio.yml` does two things:
-
-- **On every push / pull request:** installs the dependencies and runs the test suite.
-- **Every day at 8:00 a.m. (CDMX):** runs `python sync_github.py --remoto <site URL>`. In this mode the script doesn't touch any database: it adds new repos to the live site by calling the site's own API (`POST /proyectos`) with the API key. Only new projects are added; nothing is edited or deleted.
-
-One-time setup in the repo: **Settings → Secrets and variables → Actions**
-- Secret `PORTFOLIO_API_KEY`: the same key configured on the server.
-- Variable `PORTFOLIO_URL`: `https://hugoportfolio.pythonanywhere.com`
-
-You can also run it manually from the **Actions** tab → *Portfolio* → **Run workflow**.
-
-## API endpoints
-
-| Method | Endpoint          | Description         | Key required |
-|--------|-------------------|---------------------|:---:|
-| GET    | `/proyectos`      | List all projects   | — |
-| POST   | `/proyectos`      | Create a project    | ✓ |
-| GET    | `/proyectos/<id>` | Get one project     | — |
-| PUT    | `/proyectos/<id>` | Update a project    | ✓ |
-| DELETE | `/proyectos/<id>` | Delete a project    | ✓ |
-
-Example (PowerShell):
-```
-$headers = @{ "X-API-Key" = $env:PORTFOLIO_API_KEY }
-$body = @{ titulo = "New project"; tecnologias = "Python, Flask"; emoji = "🚀" } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/proyectos -Headers $headers -Body $body -ContentType "application/json"
-```
-
-Without the key, the API answers `401 Unauthorized`.
+Open `http://127.0.0.1:8000/`. Debug mode is off unless you set `FLASK_DEBUG=1`.
 
 ## Tests
 
+```bash
+python -m pytest -v
 ```
-python -m pytest
-```
 
-24 tests cover public reads, the API key protection (missing, wrong and correct key), validation, the read-only fallback, the contact section, the bilingual content and terminal, fork badges, and the GitHub sync (new repos added, hand-written texts preserved, hidden/archived repos skipped, and the remote mode that talks to the live API). They use an in-memory database, so they never touch `proyectos.db`.
+GitHub Actions runs the tests and a dependency audit on every push.
 
-## Live site
+## API endpoints
 
-[hugoportfolio.pythonanywhere.com](https://hugoportfolio.pythonanywhere.com)
+| Method | Endpoint          | Description         | Auth |
+|--------|-------------------|---------------------|------|
+| GET    | `/proyectos`      | List all projects   | —    |
+| POST   | `/proyectos`      | Create a project    | `X-API-Key` |
+| GET    | `/proyectos/<id>` | Get one project     | —    |
+| PUT    | `/proyectos/<id>` | Replace a project   | `X-API-Key` |
+| DELETE | `/proyectos/<id>` | Delete a project    | `X-API-Key` |
 
-## More about me
+`PUT` replaces the whole project, so send every field, not just the one that changes.
 
-Read the story behind the code in my logbook: [krma12.github.io/mi-bitacora](https://krma12.github.io/mi-bitacora/)
+## Security
+
+| Area | What's in place |
+|---|---|
+| **Authentication** | Writes require an `X-API-Key` header. The key comes from an environment variable and is compared in constant time (`hmac.compare_digest`). With no key configured, the API fails closed and becomes read-only. |
+| **Brute-force protection** | 5 failed key attempts within 10 minutes block that IP for 15 minutes (`429 Too Many Requests` + `Retry-After`). Reading is never blocked. |
+| **Input validation** | `repo_url` and `demo_url` only accept `https://` links (`javascript:`, `data:` and `http:` are rejected), and every field has a maximum length. |
+| **XSS** | Jinja2 auto-escaping on the server, and HTML escaping in the terminal and JSON view on the client. |
+| **Content-Security-Policy** | Scripts only from the site itself (no inline scripts or event handlers), fonts only from Google Fonts, the form only posts to Formspree, `object-src 'none'`, `base-uri 'self'`. |
+| **Transport** | HTTPS enforced + `Strict-Transport-Security`. |
+| **Clickjacking** | `frame-ancestors 'none'` + `X-Frame-Options: DENY`. |
+| **Other headers** | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (no camera, mic or location). |
+| **Production config** | Debug mode off by default. Secrets only in environment variables and GitHub Secrets, never in the repo. Keys are rotated if exposed. |
+| **Spam** | Honeypot field in the contact form. |
+| **Dependencies** | `pip-audit` in CI on every push + weekly Dependabot updates. |
+| **Regression tests** | 16 security tests check headers, link validation, escaping and rate limiting, so a protection can't silently disappear. |
+
+Found a security issue? Please contact me privately through [LinkedIn](https://www.linkedin.com/in/hugo-maldonado-a20445201) instead of opening a public issue.
 
 ## Author
 
-Hugo Maldonado ([@krma12](https://github.com/krma12)) — AI Engineering student building projects in Python, data, computer vision and cybersecurity.
+Hugo Maldonado ([@krma12](https://github.com/krma12)) — AI Engineering student focused on cybersecurity, building projects in Python, data and computer vision.

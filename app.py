@@ -8,6 +8,8 @@ from flask_restful import Api
 from models import db
 # Importamos rutas para poder inicializar las rutas de la API
 from routes import Administrador_de_rutas
+# Encabezados de seguridad, límite de intentos y validadores (ver seguridad.py)
+from seguridad import instalar_seguridad
 
 # Creamos un servidor y lo guardamos en la variable app.
 # Flask busca las plantillas en la carpeta "templates" (en minúscula):
@@ -35,6 +37,9 @@ app.config['API_KEY'] = os.environ.get('PORTFOLIO_API_KEY')
 # formas aparece en el HTML de la página. Si lo dejas vacío (FORMSPREE_ID=""),
 # la página muestra botones de correo y LinkedIn en lugar del formulario.
 app.config['FORMSPREE_ID'] = os.environ.get('FORMSPREE_ID', 'mkjjjwkd')
+
+# Encabezados de seguridad en todas las respuestas (CSP, HSTS, etc.)
+instalar_seguridad(app)
 
 # Conectamos el objeto db (de models.py) con esta app específica.
 db.init_app(app)

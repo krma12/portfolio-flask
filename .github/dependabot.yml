@@ -1,0 +1,14 @@
+# Dependabot: GitHub revisa cada semana si hay versiones nuevas o parches de seguridad
+# de las librerías (requirements.txt) y de las acciones del workflow, y abre un
+# pull request con la actualización. Las pruebas corren solas en ese PR.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

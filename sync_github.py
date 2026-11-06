@@ -109,7 +109,12 @@ def unir_tecnologias(actuales, repo):
     actuales = [t.strip() for t in (actuales or []) if t and t.strip()]
     ya = {t.lower() for t in actuales}
     nuevas = [t.strip() for t in tecnologias_de(repo).split(",") if t.strip() and t.strip().lower() not in ya]
-    return ", ".join(actuales + nuevas) if nuevas else None
+    if not nuevas:
+        return None
+    unidas = actuales + nuevas
+    while len(", ".join(unidas)) > 600 and len(unidas) > len(actuales):   # la API acepta hasta 600
+        unidas.pop()
+    return ", ".join(unidas) if len(unidas) > len(actuales) else None
 
 
 def campos_a_completar(proyecto, repo):
@@ -122,7 +127,7 @@ def campos_a_completar(proyecto, repo):
     """
     cambios = {}
     if not proyecto.get("descripcion") and repo.get("description"):
-        cambios["descripcion"] = repo["description"]
+        cambios["descripcion"] = repo["description"][:500]
     if not proyecto.get("demo_url") and repo.get("homepage"):
         cambios["demo_url"] = repo["homepage"]
     tecnologias = proyecto.get("tecnologias") or []
@@ -149,10 +154,10 @@ def datos_proyecto(repo, orden):
     """Traduce un repo de GitHub a los campos de un Proyecto."""
     return {
         "titulo": titulo_bonito(repo["name"]),
-        "descripcion": repo.get("description") or "",
+        "descripcion": (repo.get("description") or "")[:500],   # la API acepta hasta 500
         "repo_url": repo["html_url"].rstrip("/"),
         "demo_url": repo.get("homepage") or None,
-        "tecnologias": tecnologias_de(repo),
+        "tecnologias": unir_tecnologias([], repo) or "",
         "emoji": EMOJIS.get(repo.get("language"), "🚀"),
         "es_fork": bool(repo.get("fork")),
         "orden": orden,

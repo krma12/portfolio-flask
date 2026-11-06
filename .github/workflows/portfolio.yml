@@ -1,6 +1,7 @@
 # =============================================================
 # GitHub Actions del portfolio
-#   1. tests  -> corre las pruebas en cada push y pull request
+#   1. tests  -> corre las pruebas (incluidas las de seguridad) y revisa
+#                vulnerabilidades en las dependencias, en cada push y pull request
 #   2. sync   -> cada mañana agrega al portfolio publicado los repos
 #                nuevos de GitHub, usando la API del propio portfolio
 #
@@ -34,6 +35,11 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python -m pytest -v
+      # Revisa si alguna librería (Flask, SQLAlchemy…) tiene vulnerabilidades conocidas
+      - name: Auditoría de dependencias
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
 
   sync:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
