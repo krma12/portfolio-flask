@@ -55,7 +55,7 @@ class PaginaInicio(Resource):
         proyectos = Proyecto.query.order_by(Proyecto.orden, Proyecto.id).all()
 
         # Tecnologías distintas usadas en todos los proyectos (para las estadísticas)
-        tecnologias = {t for p in proyectos for t in p.lista_tecnologias}
+        tecnologias = {t for p in proyectos for t in p.etiquetas}
 
         # render_template puede recibir variables que quedan disponibles
         # dentro del archivo .html gracias a Jinja2

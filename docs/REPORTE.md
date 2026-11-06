@@ -47,12 +47,17 @@ Tener un portfolio **publicado, bilingüe, automatizado y seguro**, que cumpla c
 
 ## 5. Arquitectura y conceptos aplicados
 
-```
-GitHub (repos) ──► GitHub Actions ──► API REST del portfolio ──► SQLite
-                     (cada día)          (con clave)                 │
-                                                                     ▼
-Visitante ◄── HTTPS ◄── Flask + Jinja2 (página) ◄────────────────────┘
-```
+![Arquitectura: toda petición, de un visitante o de GitHub, pasa primero por seguridad.py](arquitectura_es.svg)
+
+**Revisión de la arquitectura**
+
+| Lo que funciona bien | Lo que se puede mejorar |
+|---|---|
+| Una sola puerta de entrada: todo pasa por `seguridad.py` antes de llegar a la página o a la API. | El deploy es manual (`git pull` + Reload); se podría automatizar después de que pasen las pruebas. |
+| La página y la API leen de los mismos modelos, así nunca muestran datos distintos. | El límite de intentos vive en memoria: se reinicia al recargar la app (aceptable con un solo proceso). |
+| Falla cerrado: sin clave configurada, la API queda de solo lectura. | SQLite en un solo servidor: suficiente para este tamaño, pero no escala a varios servidores. |
+| Las pruebas y la auditoría corren antes de cada cambio; los respaldos se guardan fuera del servidor. | Los eventos de seguridad quedan solo en el log del servidor, sin alertas ni un SIEM. |
+| La sincronización es idempotente: correrla dos veces no duplica nada. | `PUT` reemplaza el proyecto completo; un `PATCH` permitiría cambios parciales. |
 
 **Conceptos de desarrollo web**
 - **REST:** cada proyecto es un recurso con su URL (`/proyectos/<id>`), y los métodos HTTP indican la acción (GET, POST, PUT, DELETE).

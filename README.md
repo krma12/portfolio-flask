@@ -44,6 +44,15 @@ portfolio-flask/
 └── .github/            # CI workflow + Dependabot
 ```
 
+## Architecture
+
+![Architecture: every request, from a visitor or from GitHub, passes through seguridad.py](docs/arquitectura.svg)
+
+- **One entry point:** every request (visitors, the daily sync and the backup) goes through `seguridad.py` first: security headers, rate limiting and event logging.
+- **Page and API share one model:** the Jinja2 page and the REST API both read through `models.py`, so the site and the API never disagree.
+- **GitHub drives the content:** a daily job adds new repos through the API with a key stored in GitHub Secrets; another job downloads a JSON backup.
+- **Deploy is manual:** `git pull` + Reload on PythonAnywhere, only after the tests pass.
+
 ## Installation
 
 ```bash

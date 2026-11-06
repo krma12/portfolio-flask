@@ -66,3 +66,21 @@ window.portfolioTheme = (tema) => {
   applyTheme(tema);
   try { localStorage.setItem('theme', tema); } catch (e) {}
 };
+
+// ---- Las tarjetas de proyectos aparecen suavemente al bajar ----
+// threshold 0: basta con que asome un pixel (con 0.15 las tarjetas altas
+// nunca llegaban a "verse" en el celular). Sin JS o con "reducir movimiento"
+// todo se ve normal desde el inicio.
+(function () {
+  if (!("IntersectionObserver" in window)) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  root.classList.add("js-reveal");
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("visible"); observador.unobserve(e.target); }
+    });
+  }, { threshold: 0, rootMargin: "0px 0px -40px 0px" });
+  document.querySelectorAll(".reveal").forEach((el) => observador.observe(el));
+  // Red de seguridad: si algo falla, a los 2.5 s se muestra todo igual
+  setTimeout(() => document.querySelectorAll(".reveal").forEach((el) => el.classList.add("visible")), 2500);
+})();

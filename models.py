@@ -4,7 +4,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 
-from etiquetas import etiqueta_bonita
+from etiquetas import etiqueta_bonita, etiquetas_visibles, categoria_de
 
 db = SQLAlchemy()
 
@@ -46,6 +46,16 @@ class Proyecto(db.Model):
                 vistas.add(bonita.lower())
                 lista.append(bonita)
         return lista
+
+    @property
+    def etiquetas(self):
+        """Las etiquetas que se muestran en la tarjeta (sin repetidos ni genéricos)."""
+        return etiquetas_visibles(self.lista_tecnologias)
+
+    @property
+    def categoria(self):
+        """ai, security, vision, games, data, web u other: decide el color de la tarjeta."""
+        return categoria_de(self.lista_tecnologias)
 
     def to_dict(self):
         """Lo convierte a diccionario para poder devolverlo como JSON desde la API."""

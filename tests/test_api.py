@@ -100,7 +100,18 @@ def test_sin_formspree_muestra_botones_de_contacto(cliente):
     app.config['FORMSPREE_ID'] = ''
     html = cliente.get('/').data
     assert b'formspree.io' not in html
-    assert b'Email me' in html
+    assert b'LinkedIn' in html          # sin formulario, queda LinkedIn como contacto
+
+
+def test_la_pagina_no_publica_ningun_correo(cliente):
+    # El correo no se muestra en la página (los bots lo juntan para spam):
+    # el contacto es por el formulario o LinkedIn.
+    for formspree in ('', 'abc123'):
+        app.config['FORMSPREE_ID'] = formspree
+        html = cliente.get('/').data
+        assert b'mailto:' not in html
+        assert b'hotmail' not in html
+    app.config['FORMSPREE_ID'] = ''
 
 
 def test_con_formspree_muestra_el_formulario(cliente):

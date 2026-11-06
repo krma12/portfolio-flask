@@ -47,7 +47,7 @@
       "json.note": "{n} of {total} projects",
       "contact.title": "Let's build something together",
       "contact.sub": "Have a project in mind or just want to say hi? I'd love to hear from you.",
-      "contact.email": "Email me", "contact.alt": "or email me directly at",
+      "cat.ai": "AI", "cat.security": "Security", "cat.vision": "Computer Vision", "cat.data": "Data", "cat.web": "Web", "cat.games": "Games", "cat.other": "Other",
       "form.name": "Name", "form.email": "Email", "form.message": "Message",
       "form.name_ph": "Your name", "form.message_ph": "What's on your mind?", "form.send": "Send message",
       "footer": "Built with Flask, HTML & CSS.",
@@ -82,7 +82,7 @@
       "json.note": "{n} de {total} proyectos",
       "contact.title": "Construyamos algo juntos",
       "contact.sub": "¿Tienes un proyecto en mente o solo quieres saludar? Me encantaría saber de ti.",
-      "contact.email": "Escríbeme", "contact.alt": "o escríbeme directo a",
+      "cat.ai": "IA", "cat.security": "Seguridad", "cat.vision": "Visión", "cat.data": "Datos", "cat.web": "Web", "cat.games": "Juegos", "cat.other": "Otro",
       "form.name": "Nombre", "form.email": "Correo", "form.message": "Mensaje",
       "form.name_ph": "Tu nombre", "form.message_ph": "¿Qué tienes en mente?", "form.send": "Enviar mensaje",
       "footer": "Hecho con Flask, HTML y CSS.",
@@ -115,6 +115,7 @@
   // ---------------------------------------------------------------
   const CATEGORIAS = [
     { id: "python",   en: "Python",          es: "Python",                 incluye: ["python"] },
+    { id: "ai",       en: "AI",              es: "IA",                     incluye: ["llm", "ai agents", "chatbot", "anthropic", "gemini api", "ollama", "groq"] },
     { id: "vision",   en: "Computer Vision", es: "Visión por computadora", incluye: ["opencv", "mediapipe"] },
     { id: "web",      en: "Web",             es: "Web",                    incluye: ["flask", "html", "css", "javascript", "rest api", "sqlalchemy", "sqlite", "leaflet"] },
     { id: "data",     en: "Data",            es: "Datos",                  incluye: ["pandas", "numpy", "jupyter"] },
@@ -280,11 +281,10 @@
         "<span class=\"ok\">langs</span>    Spanish · English · learning PT, FR, AR, DE",
       ],
       contacto: [
-        "✉  <a href=\"mailto:sowyer99@hotmail.com\">sowyer99@hotmail.com</a>",
+        "✉  <a href=\"#contact\">contact form ↓</a>",
         "in <a href=\"https://www.linkedin.com/in/hugo-maldonado-a20445201\" target=\"_blank\" rel=\"noopener\">linkedin.com/in/hugo-maldonado</a>",
         "gh <a href=\"https://github.com/krma12\" target=\"_blank\" rel=\"noopener\">github.com/krma12</a>",
-        "<span class=\"dim\">…or use the form below ↓</span>",
-      ],
+              ],
       bitacora: "Opening my logbook in a new tab…",
       sudo: [
         "<span class=\"warn\">[sudo] password for recruiter:</span> ********",
@@ -325,11 +325,10 @@
         "<span class=\"ok\">idiomas</span>  Español · inglés · aprendiendo PT, FR, AR, DE",
       ],
       contacto: [
-        "✉  <a href=\"mailto:sowyer99@hotmail.com\">sowyer99@hotmail.com</a>",
+        "✉  <a href=\"#contact\">formulario de contacto ↓</a>",
         "in <a href=\"https://www.linkedin.com/in/hugo-maldonado-a20445201\" target=\"_blank\" rel=\"noopener\">linkedin.com/in/hugo-maldonado</a>",
         "gh <a href=\"https://github.com/krma12\" target=\"_blank\" rel=\"noopener\">github.com/krma12</a>",
-        "<span class=\"dim\">…o usa el formulario de abajo ↓</span>",
-      ],
+              ],
       bitacora: "Abriendo mi bitácora en otra pestaña…",
       sudo: [
         "<span class=\"warn\">[sudo] contraseña para reclutador:</span> ********",
@@ -485,8 +484,14 @@
 
   if (salida) {
     linea(m().bienvenida, "dim");
-    // Pequeña demo al cargar: escribe "whoami" solo
-    setTimeout(() => escribirYEjecutar("whoami"), sinAnimacion ? 0 : 600);
+    // Pequeña demo al cargar: escribe "whoami" y luego "skills" solo.
+    // Si el visitante ya empezó a escribir, la demo no lo interrumpe.
+    setTimeout(async () => {
+      await escribirYEjecutar("whoami");
+      if (sinAnimacion) return;
+      await new Promise((r) => setTimeout(r, 1400));
+      if (document.activeElement !== entrada && !entrada.value) escribirYEjecutar("skills");
+    }, sinAnimacion ? 0 : 600);
   }
 })();
 

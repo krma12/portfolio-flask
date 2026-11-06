@@ -27,9 +27,12 @@
     --surface: #ffffff;
     --text: #1f2328;
     --text-muted: #6b7280;
-    --accent: #ff6b5b;      /* coral */
-    --accent-2: #6c63ff;    /* soft purple */
-    --accent-3: #22c1a3;    /* teal */
+    /* Un solo color de acento (verde azulado tipo terminal). Para cambiarlo,
+       basta con editar estas tres líneas y las de [data-theme="dark"]. */
+    --accent: #0f766e;      /* texto y links: contraste AA sobre el fondo claro */
+    --accent-2: #0891b2;    /* misma familia, para degradados */
+    --accent-3: #14b8a6;    /* versión brillante: brillos y detalles */
+    --accent-soft: rgba(20,184,166,0.12);
     --border: #ececea;
     --header-bg: rgba(251,250,248,0.85);
     --ink: #1f2328;         /* always-dark chrome: buttons, contact box */
@@ -48,6 +51,10 @@
     --text: #f4f4f2;
     --text-muted: #9aa0a6;
     --border: #2a2d33;
+    --accent: #2dd4bf;
+    --accent-2: #22d3ee;
+    --accent-3: #2dd4bf;
+    --accent-soft: rgba(45,212,191,0.12);
     --header-bg: rgba(20,22,26,0.85);
     --shadow: 0 10px 30px rgba(0,0,0,0.4);
     --shadow-hover: 0 16px 40px rgba(0,0,0,0.5);
@@ -190,6 +197,13 @@
     overflow: hidden;
   }
 
+  /* Capa de brillos: se desvanece hacia abajo para que no termine en un corte recto */
+  .hero-glow{
+    position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+
   .blob{
     position: absolute;
     border-radius: 50%;
@@ -200,7 +214,7 @@
   }
 
   .blob-1{ width: 320px; height: 320px; background: var(--accent); top: -80px; right: -60px; }
-  .blob-2{ width: 260px; height: 260px; background: var(--accent-2); bottom: -60px; left: -40px; animation-delay: 2s; }
+  .blob-2{ width: 260px; height: 260px; background: var(--accent-2); bottom: 60px; left: -80px; animation-delay: 2s; }
   .blob-3{ width: 180px; height: 180px; background: var(--accent-3); top: 40%; right: 20%; animation-delay: 4s; }
 
   @keyframes float{
@@ -417,12 +431,12 @@
     margin-bottom: 16px;
   }
 
-  .skill-card:nth-child(1) .skill-icon{ background: rgba(255,107,91,0.12); }
-  .skill-card:nth-child(2) .skill-icon{ background: rgba(108,99,255,0.12); }
-  .skill-card:nth-child(3) .skill-icon{ background: rgba(34,193,163,0.12); }
-  .skill-card:nth-child(4) .skill-icon{ background: rgba(255,107,91,0.12); }
-  .skill-card:nth-child(5) .skill-icon{ background: rgba(108,99,255,0.12); }
-  .skill-card:nth-child(6) .skill-icon{ background: rgba(34,193,163,0.12); }
+  .skill-card:nth-child(1) .skill-icon{ background: var(--accent-soft); }
+  .skill-card:nth-child(2) .skill-icon{ background: var(--accent-soft); }
+  .skill-card:nth-child(3) .skill-icon{ background: var(--accent-soft); }
+  .skill-card:nth-child(4) .skill-icon{ background: var(--accent-soft); }
+  .skill-card:nth-child(5) .skill-icon{ background: var(--accent-soft); }
+  .skill-card:nth-child(6) .skill-icon{ background: var(--accent-soft); }
 
   .skill-card h3{ font-size: 1.05rem; margin-bottom: 8px; }
   .skill-card p{ color: var(--text-muted); font-size: 0.9rem; }
@@ -452,10 +466,28 @@
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
   }
 
-  /* Ciclamos los 3 colores cada 3 tarjetas, así se ve bien sin importar cuántos proyectos haya */
-  .project-card:nth-child(3n+1) .project-thumb{ background: linear-gradient(135deg, var(--accent), #ffb199); }
-  .project-card:nth-child(3n+2) .project-thumb{ background: linear-gradient(135deg, var(--accent-2), #a29bff); }
-  .project-card:nth-child(3n+3) .project-thumb{ background: linear-gradient(135deg, var(--accent-3), #7fe0cd); }
+  /* El color dice de qué trata el proyecto (lo decide etiquetas.categoria_de) */
+  .project-thumb{ position: relative; }
+  .project-thumb.cat-security{ background: linear-gradient(135deg, #0f766e, #2dd4bf); }
+  .project-thumb.cat-ai{       background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+  .project-thumb.cat-vision{   background: linear-gradient(135deg, #1d4ed8, #60a5fa); }
+  .project-thumb.cat-data{     background: linear-gradient(135deg, #b45309, #f59e0b); }
+  .project-thumb.cat-web{      background: linear-gradient(135deg, #be185d, #f472b6); }
+  .project-thumb.cat-games,
+  .project-thumb.cat-other{    background: linear-gradient(135deg, #475569, #94a3b8); }
+  .thumb-cat{
+    position: absolute; top: 12px; left: 12px;
+    font: 600 0.7rem/1 'Inter', sans-serif; letter-spacing: 0.04em; text-transform: uppercase;
+    color: #fff; background: rgba(0,0,0,0.28);
+    padding: 6px 10px; border-radius: 999px;
+  }
+  .project-thumb .thumb-emoji{ display: inline-block; transition: transform 0.3s ease; }
+  .project-card:hover .thumb-emoji{ transform: scale(1.12) rotate(-4deg); }
+  .project-card:hover{ border-color: var(--accent-3); }
+
+  /* Aparecen suavemente al bajar (solo si hay JavaScript: sin él, todo se ve normal) */
+  .js-reveal .reveal{ opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .js-reveal .reveal.visible{ opacity: 1; transform: none; }
 
   .empty-state{
     grid-column: 1 / -1;
@@ -669,8 +701,8 @@
   .term-body .warn{ color: #d29922; }
   .term-body .err{ color: #ff7b72; }
   .term-body .dim{ color: #8b949e; }
-  .term-body .acc{ color: #ff8a7d; }
-  .term-body .pur{ color: #a5a0ff; }
+  .term-body .acc{ color: #2dd4bf; }
+  .term-body .pur{ color: #79c0ff; }
   .term-body a{ color: #58a6ff; text-decoration: underline; }
   .term-form{
     display: flex; align-items: center; gap: 8px;
@@ -786,6 +818,7 @@
   @media (prefers-reduced-motion: reduce){
     html{ scroll-behavior: auto; }
     .blob, .eyebrow .dot{ animation: none !important; }
+    .js-reveal .reveal{ opacity: 1; transform: none; }
     *{ transition-duration: 0.01ms !important; }
   }
 
@@ -835,9 +868,11 @@
 <main id="main">
 
 <section class="hero">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
+  <div class="hero-glow" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
   <div class="wrap hero-inner">
     <div class="hero-text">
       <span class="eyebrow"><span class="dot"></span> <span data-i18n="hero.eyebrow">Open to new opportunities</span></span>
@@ -965,8 +1000,11 @@
 
     <div class="projects-grid" id="projectsGrid">
       {% for proyecto in proyectos %}
-      <article class="project-card" data-id="{{ proyecto.id }}" data-tech="{{ proyecto.lista_tecnologias|join('|')|lower }}">
-        <div class="project-thumb" aria-hidden="true">{{ proyecto.emoji or '🚀' }}</div>
+      <article class="project-card reveal" data-id="{{ proyecto.id }}" data-tech="{{ proyecto.lista_tecnologias|join('|')|lower }}">
+        <div class="project-thumb cat-{{ proyecto.categoria }}" aria-hidden="true">
+          <span class="thumb-cat" data-i18n="cat.{{ proyecto.categoria }}">{{ {'ai':'AI','security':'Security','vision':'Computer Vision','data':'Data','web':'Web','games':'Games','other':'Other'}[proyecto.categoria] }}</span>
+          <span class="thumb-emoji">{{ proyecto.emoji or '🚀' }}</span>
+        </div>
         <div class="project-body">
           <h3>{{ proyecto.titulo }}</h3>
           {% if proyecto.es_fork %}
@@ -979,11 +1017,11 @@
           <p class="project-metric" data-lang="en">Key result: {{ proyecto.resultado }}</p>
           <p class="project-metric" data-lang="es">Resultado clave: {{ proyecto.resultado_es or proyecto.resultado }}</p>
           {% endif %}
-          {% if proyecto.lista_tecnologias %}
+          {% if proyecto.etiquetas %}
           {# Muestra máximo 6 etiquetas; el resto se abre con el botón "+N" #}
           <ul class="tech-tags" aria-label="Technologies">
-            {% for tecnologia in proyecto.lista_tecnologias %}<li{% if loop.index > 6 %} class="tag-extra" hidden{% endif %}>{{ tecnologia }}</li>{% endfor %}
-            {% if proyecto.lista_tecnologias|length > 6 %}<li class="tag-more-item"><button type="button" class="tag-more" aria-expanded="false" data-mas="+{{ proyecto.lista_tecnologias|length - 6 }}">+{{ proyecto.lista_tecnologias|length - 6 }}</button></li>{% endif %}
+            {% for tecnologia in proyecto.etiquetas %}<li{% if loop.index > 6 %} class="tag-extra" hidden{% endif %}>{{ tecnologia }}</li>{% endfor %}
+            {% if proyecto.etiquetas|length > 6 %}<li class="tag-more-item"><button type="button" class="tag-more" aria-expanded="false" data-mas="+{{ proyecto.etiquetas|length - 6 }}">+{{ proyecto.etiquetas|length - 6 }}</button></li>{% endif %}
           </ul>
           {% endif %}
           <div class="project-links">
@@ -1026,11 +1064,9 @@
       {% else %}
       <!-- Sin FORMSPREE_ID configurado: botones directos en vez de un formulario que no enviaría nada -->
       <div class="contact-actions">
-        <a href="mailto:sowyer99@hotmail.com" class="btn btn-primary" data-i18n="contact.email">Email me</a>
-        <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" class="btn btn-secondary" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" class="btn btn-primary" target="_blank" rel="noopener">LinkedIn ↗</a>
       </div>
       {% endif %}
-      <p class="contact-alt"><span data-i18n="contact.alt">or email me directly at</span> <a href="mailto:sowyer99@hotmail.com">sowyer99@hotmail.com</a></p>
     </div>
   </div>
 </section>
@@ -1040,7 +1076,7 @@
 <footer>
   <div class="wrap">
     <div class="footer-socials">
-      <a href="mailto:sowyer99@hotmail.com" aria-label="Email">✉</a>
+      <a href="#contact" aria-label="Contact form">✉</a>
       <a href="https://www.linkedin.com/in/hugo-maldonado-a20445201" aria-label="LinkedIn" target="_blank" rel="noopener">in</a>
       <a href="https://github.com/krma12" aria-label="GitHub" target="_blank" rel="noopener">gh</a>
       <a href="https://krma12.github.io/mi-bitacora/" aria-label="My logbook" target="_blank" rel="noopener">📓</a>
