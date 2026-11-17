@@ -183,3 +183,54 @@ def test_titulo_recupera_acento_de_github():
 def test_lista_tecnologias_sin_repetidos(contexto):
     p = Proyecto(titulo="X", tecnologias="Python, Ai Agents, ai-agents, Llm")
     assert p.lista_tecnologias == ["Python", "AI Agents", "LLM"]
+
+
+# ---------- Reintentos: una falla pasajera no tumba la sincronización ----------
+import io
+import urllib.error
+import sync_github
+
+
+class _Respuesta(io.BytesIO):
+    status = 200
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+
+
+def _urlopen_falso(respuestas):
+    """Devuelve las respuestas en orden; si es una excepción, la lanza."""
+    def urlopen(peticion, timeout=None):
+        r = respuestas.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return _Respuesta(r)
+    return urlopen
+
+
+def test_reintenta_si_el_portfolio_tarda(monkeypatch):
+    monkeypatch.setattr(sync_github.urllib.request, "urlopen",
+                        _urlopen_falso([TimeoutError("timed out"), b'[{"id": 1}]']))
+    esperas = []
+    codigo, datos = sync_github.pedir_json("https://x/proyectos", dormir=esperas.append)
+    assert codigo == 200 and datos == [{"id": 1}]
+    assert esperas == [10]
+
+
+def test_reintenta_si_hay_error_del_servidor(monkeypatch):
+    error_502 = urllib.error.HTTPError("https://x", 502, "Bad Gateway", {}, io.BytesIO(b"<html>maintenance</html>"))
+    monkeypatch.setattr(sync_github.urllib.request, "urlopen", _urlopen_falso([error_502, b"[]"]))
+    assert sync_github.pedir_json("https://x/proyectos", dormir=lambda s: None) == (200, [])
+
+
+def test_no_reintenta_si_la_clave_es_mala(monkeypatch):
+    error_401 = urllib.error.HTTPError("https://x", 401, "Unauthorized", {}, io.BytesIO(b'{"mensaje": "clave"}'))
+    llamadas = _urlopen_falso([error_401])
+    monkeypatch.setattr(sync_github.urllib.request, "urlopen", llamadas)
+    assert sync_github.pedir_json("https://x/proyectos", "POST", {}, "mala", dormir=lambda s: None)[0] == 401
+
+
+def test_se_rinde_con_un_mensaje_claro(monkeypatch):
+    monkeypatch.setattr(sync_github.urllib.request, "urlopen",
+                        _urlopen_falso([TimeoutError("t")] * 3))
+    with pytest.raises(RuntimeError, match="no respondió tras 3 intentos"):
+        sync_github.pedir_json("https://x/proyectos", dormir=lambda s: None)

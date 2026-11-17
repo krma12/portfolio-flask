@@ -38,6 +38,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -63,6 +64,10 @@ LENGUAJES = {"Jupyter Notebook": "Jupyter"}
 EMOJIS = {"Python": "🐍", "Jupyter Notebook": "📓", "HTML": "🌐", "JavaScript": "✨", "CSS": "🎨"}
 
 
+REINTENTOS = 3          # las APIs a veces tardan o están en mantenimiento (PythonAnywhere gratis, GitHub)
+ESPERA_BASE = 10        # segundos: espera 10 s, luego 20 s entre intentos
+
+
 def obtener_repos():
     """Descarga la lista de repos públicos (incluye forks) desde la API de GitHub."""
     url = f"https://api.github.com/users/{USUARIO}/repos?per_page=100&sort=created"
@@ -74,8 +79,16 @@ def obtener_repos():
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         peticion.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(peticion, timeout=20) as respuesta:
-        return json.load(respuesta)
+    for intento in range(1, REINTENTOS + 1):
+        try:
+            with urllib.request.urlopen(peticion, timeout=20) as respuesta:
+                return json.load(respuesta)
+        except (urllib.error.URLError, TimeoutError) as error:
+            # 403/429 = límite de consultas de GitHub; 5xx o sin red = falla pasajera
+            if intento == REINTENTOS:
+                raise RuntimeError(f"GitHub no respondió tras {REINTENTOS} intentos: {error}") from error
+            print(f"  GitHub falló ({error}); reintento {intento + 1}/{REINTENTOS} en {ESPERA_BASE * intento} s…")
+            time.sleep(ESPERA_BASE * intento)
 
 
 def titulo_bonito(nombre_repo):
@@ -206,21 +219,47 @@ def sincronizar(repos, db, Proyecto):
 # ---------------------------------------------------------------------------
 # Modo remoto: hablar con el portfolio publicado a través de su propia API
 # ---------------------------------------------------------------------------
-def pedir_json(url, metodo="GET", datos=None, clave=None):
-    """Hace una petición HTTP y devuelve (código, json)."""
+def pedir_json(url, metodo="GET", datos=None, clave=None, dormir=time.sleep):
+    """
+    Hace una petición HTTP y devuelve (código, json).
+
+    Si el portfolio no responde (tiempo agotado, sin conexión) o responde 5xx
+    (error del servidor, mantenimiento), reintenta hasta REINTENTOS veces antes
+    de rendirse. Los 4xx (clave mala, datos inválidos) no se reintentan: repetir
+    no los arregla, y con la clave mala solo sumaría intentos al bloqueo por IP.
+    """
     cuerpo = json.dumps(datos).encode() if datos is not None else None
-    peticion = urllib.request.Request(url, data=cuerpo, method=metodo, headers={
-        "Content-Type": "application/json",
-        "User-Agent": "portfolio-sync",
-    })
-    if clave:
-        peticion.add_header("X-API-Key", clave)
+    ultimo_error = None
+    for intento in range(1, REINTENTOS + 1):
+        peticion = urllib.request.Request(url, data=cuerpo, method=metodo, headers={
+            "Content-Type": "application/json",
+            "User-Agent": "portfolio-sync",
+        })
+        if clave:
+            peticion.add_header("X-API-Key", clave)
+        try:
+            with urllib.request.urlopen(peticion, timeout=30) as respuesta:
+                return respuesta.status, json.load(respuesta)
+        except urllib.error.HTTPError as error:
+            if error.code < 500:
+                # 401, 403, 404, 429…: devolvemos el código para que quien llama decida
+                return error.code, leer_json(error.read())
+            ultimo_error = f"el servidor respondió {error.code}"
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
+            ultimo_error = f"{type(error).__name__}: {error}"
+        if intento < REINTENTOS:
+            espera = ESPERA_BASE * intento
+            print(f"  {metodo} {url} falló ({ultimo_error}); reintento {intento + 1}/{REINTENTOS} en {espera} s…")
+            dormir(espera)
+    raise RuntimeError(f"El portfolio no respondió tras {REINTENTOS} intentos ({metodo} {url}): {ultimo_error}")
+
+
+def leer_json(bytes_respuesta):
+    """Lee JSON sin romperse si el servidor mandó HTML (p. ej. una página de error)."""
     try:
-        with urllib.request.urlopen(peticion, timeout=30) as respuesta:
-            return respuesta.status, json.load(respuesta)
-    except urllib.error.HTTPError as error:
-        # 401, 403, 404…: devolvemos el código para que quien llama decida qué hacer
-        return error.code, json.loads(error.read() or b"{}")
+        return json.loads(bytes_respuesta or b"{}")
+    except json.JSONDecodeError:
+        return {"mensaje": bytes_respuesta[:200].decode("utf-8", "replace")}
 
 
 def sincronizar_remoto(repos, url_base, clave, pedir=pedir_json):
